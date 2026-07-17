@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>FreeCAD 電子零件盒參數命名字典</title>
+<style>
+:root{
+  --bg:#f4f6f8;--panel:#fff;--text:#172033;--muted:#687386;--border:#d9dee7;
+  --accent:#2563eb;--accent-soft:#eff6ff;--warn:#b45309;--danger:#b42318;
+  --paused:#f8fafc;--shadow:0 8px 28px rgba(15,23,42,.08)
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}
+button{touch-action:manipulation}
+header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.top{max-width:1320px;margin:auto;padding:11px 14px}
+h1{font-size:1.1rem;margin:0 0 9px}
+.controls{display:grid;grid-template-columns:minmax(220px,1fr) 160px 160px auto;gap:8px}
+input,select,textarea{border:1px solid var(--border);border-radius:10px;padding:10px;background:white;color:var(--text);width:100%}
+button{border:1px solid var(--border);border-radius:10px;padding:9px 12px;background:white;color:var(--text);cursor:pointer}
+button.primary{background:var(--accent);color:white;border-color:var(--accent)}
+button.soft{background:var(--accent-soft);border-color:#bfdbfe;color:#1d4ed8}
+button.warn{color:var(--warn)}
+main{max-width:1320px;margin:auto;padding:14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.stats{font-size:.88rem;color:var(--muted);margin-left:auto;align-self:center}
+.view-tabs{display:flex;gap:8px;margin-bottom:12px;overflow:auto;padding-bottom:2px}
+.view-tabs button.active{background:#172033;color:white;border-color:#172033}
+.section-title{font-size:.95rem;color:var(--muted);margin:18px 2px 8px}
+.card-list{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}
+.card.paused{background:var(--paused);opacity:.72}
+.card.selected,.subgroup.selected>.subgroup-head,.project-card.selected{background:var(--accent-soft)}
+.card,.project-card,.subgroup{position:relative}
+.card.dragging,.project-card.dragging,.subgroup.dragging{
+  z-index:30;box-shadow:0 8px 20px rgba(15,23,42,.18);
+}
+.ghost-stack{position:absolute;inset:0;background:var(--panel);border:1px solid var(--border);border-radius:inherit;pointer-events:none}
+.count-badge{position:absolute;top:-8px;right:-8px;background:var(--accent);color:#fff;font-size:.72rem;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 6px;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.subgroup-body.drop-target-hilite{outline:2px dashed var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+.sel-check{user-select:none;color:#94a3b8;font-size:1.15rem;padding:4px;cursor:pointer;flex:0 0 auto;display:flex}
+.sel-check.on{color:var(--accent)}
+.multiselect-btn.active{background:#172033;color:#fff;border-color:#172033}
+.card-summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:9px;padding:11px 12px;cursor:pointer}
+.card-summary.has-sel{grid-template-columns:auto auto minmax(0,1fr) auto auto}
+.drag-handle{user-select:none;color:#94a3b8;font-size:1.2rem;padding:4px;cursor:grab;touch-action:none;flex:0 0 auto}
+.card-title{min-width:0}
+.zh-title{font-weight:700;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.en-sub{font:0.78rem ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.card-flags{display:flex;gap:5px;align-items:center}
+.badge{font-size:.72rem;background:#eef2f7;border-radius:999px;padding:4px 7px;color:#475569;white-space:nowrap}
+.star{color:#d97706}
+.chev{font-size:1rem;transition:.18s}
+.card.expanded .chev{transform:rotate(180deg)}
+.card-body{display:none;border-top:1px solid var(--border);padding:12px}
+.card.expanded .card-body{display:block}
+.name-code{font:700 1rem ui-monospace,SFMono-Regular,Consolas,monospace;word-break:break-all;background:#f8fafc;border:1px solid var(--border);padding:10px;border-radius:9px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0}
+.note-preview{font-size:.88rem;color:#475569;border-left:3px solid #cbd5e1;padding-left:8px;margin:10px 0;white-space:pre-wrap}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.actions button{flex:0 0 auto}
+.assign-btn{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+.assignment-status{font-size:.82rem;color:var(--muted);margin-top:8px}
+.project-board{display:grid;grid-template-columns:260px minmax(0,1fr);gap:12px}
+.project-sidebar,.project-main{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.project-list{display:flex;flex-direction:column;gap:6px}
+.project-list button{text-align:left}
+.project-list button.active{background:#172033;color:white;border-color:#172033}
+.project-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.project-head h2{font-size:1rem;margin:0 auto 0 0}
+#subgroupList{display:flex;flex-direction:column;gap:10px}
+.subgroup{border:1px solid var(--border);border-radius:12px;background:#fafafa}
+.subgroup-head{display:flex;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid var(--border)}
+.subgroup-head strong{flex:1}
+.subgroup-body{padding:8px;min-height:48px;display:flex;flex-direction:column;gap:7px}
+.project-card{background:white;border:1px solid var(--border);border-radius:10px;padding:9px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
+.project-card.has-sel{grid-template-columns:auto auto minmax(0,1fr) auto}
+.project-card .zh-title{font-size:.95rem}
+.project-card .en-sub{font-size:.75rem}
+.empty{text-align:center;color:var(--muted);padding:46px 12px}
+dialog{border:none;border-radius:16px;padding:0;width:min(680px,calc(100vw - 22px));max-height:92vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.25);background:var(--panel);color:var(--text)}
+dialog::backdrop{background:rgba(15,23,42,.55)}
+.modal{padding:18px}
+.modal h2{margin-top:0;font-size:1.1rem}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.formgrid .full{grid-column:1/-1}
+.modalfooter{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;position:sticky;bottom:0;background:var(--panel);padding-top:10px}
+.settings-list{display:flex;flex-direction:column;gap:9px}
+.setting-row{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--border);padding:10px;border-radius:10px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111827;color:white;padding:10px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:60}
+.toast.show{opacity:1}
+.toast.success{background:#166534}
+.toast.error{background:#991b1b}
+.hidden{display:none!important}
+@media(max-width:780px){
+  .controls{grid-template-columns:1fr 1fr}
+  .controls #search{grid-column:1/-1}
+  .project-board{grid-template-columns:1fr}
+  .project-sidebar{padding:9px}
+  .project-list{flex-direction:row;overflow:auto}
+  .project-list button{white-space:nowrap}
+  .stats{width:100%;margin-left:0}
+  .formgrid{grid-template-columns:1fr}
+  .formgrid .full{grid-column:auto}
+  .card-summary{grid-template-columns:auto minmax(0,1fr) auto}
+  .card-flags{display:none}
+  .toolbar button{flex:1 1 auto}
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#0b1220;--panel:#111827;--text:#e5e7eb;--muted:#94a3b8;--border:#2a3648;--accent:#3b82f6;--accent-soft:#102248;--paused:#0f172a;--shadow:none}
+  header{background:rgba(17,24,39,.96)}
+  input,select,textarea,button{background:#111827;color:#e5e7eb}
+  .badge{background:#1f2937;color:#cbd5e1}
+  .name-code{background:#0f172a}
+  .subgroup{background:#0f172a}
+  dialog,.modal{background:#111827;color:#e5e7eb}
+  dialog input,dialog select,dialog textarea,dialog button{background:#0f172a;color:#e5e7eb;border-color:#334155}
+  #pickerList .project-card{background:#0f172a;color:#e5e7eb;border-color:#334155}
+  #pickerList .zh-title{color:#f8fafc}
+  #pickerList .en-sub{color:#cbd5e1}
+  .project-card{background:#111827;color:#e5e7eb}
+  .assign-btn{background:#052e2b;border-color:#0f766e;color:#99f6e4}
+  .note-preview{color:#cbd5e1}
+}
+</style>
+</head>
+<body>
+<header>
+<div class="top">
+  <h1>FreeCAD 電子零件盒參數命名字典</h1>
+  <div class="controls">
+    <input id="search" type="search" placeholder="搜尋中文、英文、分類、標註…" autocomplete="off">
+    <select id="category"><option value="">全部分類</option></select>
+    <select id="statusFilter"><option value="active">啟用中</option><option value="all">全部狀態</option><option value="paused">已暫停</option></select>
+    <button id="favOnly">☆ 僅顯示常用</button>
+  </div>
+</div>
+</header>
+
+<main>
+  <div class="view-tabs">
+    <button id="tabDictionary" class="active">命名字典</button>
+    <button id="tabProjects">專案群組</button>
+  </div>
+
+  <section id="dictionaryView">
+    <div class="toolbar">
+      <button class="primary" id="addBtn">＋ 新增命名</button>
+      <button id="collapseAllBtn">全部收折</button>
+      <button id="expandAllBtn">全部展開</button>
+      <button id="multiSelectDictBtn" class="multiselect-btn">多選</button>
+      <button id="settingsBtn">設定</button>
+      <span class="stats" id="stats"></span>
+    </div>
+    <div class="card-list" id="cardList"></div>
+    <div class="empty" id="empty" hidden>找不到符合條件的命名。</div>
+  </section>
+
+  <section id="projectsView" class="hidden">
+    <div class="project-board">
+      <aside class="project-sidebar">
+        <div class="toolbar">
+          <button class="primary" id="addProjectBtn">＋ 新增專案</button>
+        </div>
+        <div class="project-list" id="projectList"></div>
+      </aside>
+      <section class="project-main">
+        <div id="projectEmpty" class="empty">請先建立或選擇專案群組。</div>
+        <div id="projectContent" class="hidden">
+          <div class="project-head">
+            <h2 id="projectTitle"></h2>
+            <button id="renameProjectBtn">重新命名</button>
+            <button id="addSubgroupBtn">＋ 小群組</button>
+            <button id="addCardsToProjectBtn" class="soft">＋ 從字典加入字卡</button>
+            <button id="multiSelectProjectBtn" class="multiselect-btn">多選</button>
+            <button id="deleteProjectBtn" class="warn">移除專案</button>
+          </div>
+          <div id="subgroupList"></div>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<dialog id="editor">
+<form method="dialog" class="modal" id="editForm">
+  <h2 id="dialogTitle">新增命名</h2>
+  <input type="hidden" id="editId">
+  <div class="formgrid">
+    <label>英文名稱<input id="fName" required placeholder="例如 KnobHoleDia"></label>
+    <label>中文說明<input id="fZh" required placeholder="例如 旋鈕開孔直徑"></label>
+    <label>分類<input id="fCategory" required placeholder="例如 旋鈕"></label>
+    <label>尺寸類型<input id="fSuffix" placeholder="例如 Dia"></label>
+    <label class="full">標籤（以逗號分隔）<input id="fTags" placeholder="例如 開孔, 面板, 圓孔"></label>
+    <label>常用<select id="fFavorite"><option value="false">否</option><option value="true">是</option></select></label>
+    <label>狀態<select id="fActive"><option value="true">啟用</option><option value="false">暫停</option></select></label>
+    <label class="full">標註<textarea id="fNote" rows="4" placeholder="可記錄規格、來源、適用零件或加工注意事項"></textarea></label>
+  </div>
+  <div class="modalfooter">
+    <button value="cancel">取消</button>
+    <button class="primary" id="saveBtn" value="default">儲存</button>
+  </div>
+</form>
+</dialog>
+
+<dialog id="settingsDialog">
+<div class="modal">
+  <h2>設定</h2>
+  <div class="settings-list">
+    <div class="setting-row"><span>匯出全部字典、專案與設定</span><button id="exportBtn">匯出資料</button></div>
+    <div class="setting-row"><span>從備份檔還原資料</span><button id="importBtn">匯入資料</button></div>
+    <div class="setting-row"><span>還原內建字典並清除專案</span><button id="resetBtn" class="warn">還原字典</button></div>
+  </div>
+  <input id="fileInput" type="file" accept="application/json" hidden>
+  <div class="modalfooter"><button onclick="settingsDialog.close()">關閉</button></div>
+</div>
+</dialog>
+
+<dialog id="projectDialog">
+<form method="dialog" class="modal">
+  <h2 id="projectDialogTitle">新增專案</h2>
+  <input type="hidden" id="projectEditId">
+  <label>專案名稱<input id="projectName" required placeholder="例如 淨水器控制盒"></label>
+  <div class="modalfooter"><button value="cancel">取消</button><button id="saveProjectBtn" class="primary" value="default">儲存</button></div>
+</form>
+</dialog>
+
+<dialog id="subgroupDialog">
+<form method="dialog" class="modal">
+  <h2>新增小群組</h2>
+  <label>小群組名稱<input id="subgroupName" required placeholder="例如 前面板、PCB 固定、電池盒"></label>
+  <div class="modalfooter"><button value="cancel">取消</button><button id="saveSubgroupBtn" class="primary" value="default">儲存</button></div>
+</form>
+</dialog>
+
+<dialog id="assignDialog">
+<div class="modal">
+  <h2>指派字卡到專案</h2>
+  <div class="name-code" id="assignCardName"></div>
+  <div class="formgrid" style="margin-top:12px">
+    <label>專案群組
+      <select id="assignProject"></select>
+    </label>
+    <label>小群組
+      <select id="assignSubgroup"></select>
+    </label>
+  </div>
+  <div id="assignInfo" class="note-preview" style="margin-top:12px"></div>
+  <div class="modalfooter">
+    <button onclick="assignDialog.close()">取消</button>
+    <button id="confirmAssignBtn" class="primary">加入</button>
+  </div>
+</div>
+</dialog>
+
+<dialog id="pickerDialog">
+<div class="modal">
+  <h2>從字典加入字卡</h2>
+  <input id="pickerSearch" type="search" placeholder="搜尋命名">
+  <label style="display:block;margin-top:10px">加入到小群組
+    <select id="pickerSubgroup"></select>
+  </label>
+  <div id="pickerList" class="card-list" style="margin-top:10px;max-height:52vh;overflow:auto"></div>
+  <div class="modalfooter"><button onclick="pickerDialog.close()">完成</button></div>
+</div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BUILTIN = [{"id": 1, "category": "外殼", "name": "BoxOuterWidth", "zh": "外殼外部寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 0, "tags": ["外部尺寸"]}, {"id": 2, "category": "外殼", "name": "BoxOuterHeight", "zh": "外殼外部高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 1, "tags": ["外部尺寸"]}, {"id": 3, "category": "外殼", "name": "BoxOuterDepth", "zh": "外殼外部深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 2, "tags": ["外部尺寸"]}, {"id": 4, "category": "外殼", "name": "BoxInnerWidth", "zh": "外殼內部寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 3, "tags": ["內部空間"]}, {"id": 5, "category": "外殼", "name": "BoxInnerHeight", "zh": "外殼內部高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 4, "tags": ["內部空間"]}, {"id": 6, "category": "外殼", "name": "BoxInnerDepth", "zh": "外殼內部深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 5, "tags": ["內部空間"]}, {"id": 7, "category": "外殼", "name": "WallThickness", "zh": "通用壁厚", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 6, "tags": ["壁厚"]}, {"id": 8, "category": "外殼", "name": "BottomThickness", "zh": "底板厚度", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 7, "tags": ["壁厚"]}, {"id": 9, "category": "外殼", "name": "TopThickness", "zh": "上蓋厚度", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 8, "tags": ["壁厚"]}, {"id": 10, "category": "外殼", "name": "OuterCornerRadius", "zh": "外部圓角半徑", "suffix": "Radius", "favorite": false, "note": "", "active": true, "order": 9, "tags": ["圓角"]}, {"id": 11, "category": "外殼", "name": "InnerCornerRadius", "zh": "內部圓角半徑", "suffix": "Radius", "favorite": false, "note": "", "active": true, "order": 10, "tags": ["圓角"]}, {"id": 12, "category": "外殼", "name": "PrintClearance", "zh": "3D 列印配合間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 11, "tags": ["間隙"]}, {"id": 13, "category": "外殼", "name": "AssemblyClearance", "zh": "組裝預留間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 12, "tags": ["間隙"]}, {"id": 14, "category": "外殼", "name": "PartClearance", "zh": "零件與外殼間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 13, "tags": ["間隙"]}, {"id": 15, "category": "面板", "name": "PanelWidth", "zh": "面板寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 14, "tags": ["基本尺寸"]}, {"id": 16, "category": "面板", "name": "PanelHeight", "zh": "面板高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 15, "tags": ["基本尺寸"]}, {"id": 17, "category": "面板", "name": "PanelThickness", "zh": "面板厚度", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 16, "tags": ["基本尺寸"]}, {"id": 18, "category": "面板", "name": "PanelCornerRadius", "zh": "面板圓角半徑", "suffix": "Radius", "favorite": false, "note": "", "active": true, "order": 17, "tags": ["圓角"]}, {"id": 19, "category": "面板", "name": "PanelOffsetX", "zh": "面板水平偏移", "suffix": "OffsetX", "favorite": false, "note": "", "active": true, "order": 18, "tags": ["位置"]}, {"id": 20, "category": "面板", "name": "PanelOffsetY", "zh": "面板垂直偏移", "suffix": "OffsetY", "favorite": false, "note": "", "active": true, "order": 19, "tags": ["位置"]}, {"id": 21, "category": "面板", "name": "PanelBorderWidth", "zh": "面板邊框寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 20, "tags": ["邊框"]}, {"id": 22, "category": "面板", "name": "PanelLipWidth", "zh": "面板唇邊寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 21, "tags": ["配合"]}, {"id": 23, "category": "面板", "name": "PanelLipDepth", "zh": "面板唇邊深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 22, "tags": ["配合"]}, {"id": 24, "category": "面板", "name": "PanelFitClearance", "zh": "面板配合間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 23, "tags": ["配合"]}, {"id": 25, "category": "按鈕", "name": "ButtonHoleDia", "zh": "圓形按鈕開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 24, "tags": ["開孔"]}, {"id": 26, "category": "按鈕", "name": "ButtonBodyDia", "zh": "按鈕本體直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 25, "tags": ["本體"]}, {"id": 27, "category": "按鈕", "name": "ButtonFlangeDia", "zh": "按鈕外緣直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 26, "tags": ["本體"]}, {"id": 28, "category": "按鈕", "name": "ButtonCutoutWidth", "zh": "矩形按鈕開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 27, "tags": ["開孔"]}, {"id": 29, "category": "按鈕", "name": "ButtonCutoutHeight", "zh": "矩形按鈕開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 28, "tags": ["開孔"]}, {"id": 30, "category": "按鈕", "name": "ButtonCornerRadius", "zh": "矩形按鈕開孔圓角", "suffix": "Radius", "favorite": false, "note": "", "active": true, "order": 29, "tags": ["開孔"]}, {"id": 31, "category": "按鈕", "name": "ButtonCenterX", "zh": "按鈕中心 X 座標", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 30, "tags": ["位置"]}, {"id": 32, "category": "按鈕", "name": "ButtonCenterY", "zh": "按鈕中心 Y 座標", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 31, "tags": ["位置"]}, {"id": 33, "category": "按鈕", "name": "ButtonPitchX", "zh": "按鈕水平間距", "suffix": "PitchX", "favorite": false, "note": "", "active": true, "order": 32, "tags": ["排列"]}, {"id": 34, "category": "按鈕", "name": "ButtonPitchY", "zh": "按鈕垂直間距", "suffix": "PitchY", "favorite": false, "note": "", "active": true, "order": 33, "tags": ["排列"]}, {"id": 35, "category": "按鈕", "name": "ButtonCount", "zh": "按鈕數量", "suffix": "Count", "favorite": false, "note": "", "active": true, "order": 34, "tags": ["排列"]}, {"id": 36, "category": "旋鈕", "name": "KnobHoleDia", "zh": "旋鈕開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 35, "tags": ["開孔"]}, {"id": 37, "category": "旋鈕", "name": "KnobShaftHoleDia", "zh": "旋鈕軸孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 36, "tags": ["軸孔"]}, {"id": 38, "category": "旋鈕", "name": "KnobShaftDia", "zh": "旋鈕軸直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 37, "tags": ["軸"]}, {"id": 39, "category": "旋鈕", "name": "KnobShaftFlatDepth", "zh": "D 型軸削平深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 38, "tags": ["D 型軸"]}, {"id": 40, "category": "旋鈕", "name": "KnobShaftFlatWidth", "zh": "D 型軸平面寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 39, "tags": ["D 型軸"]}, {"id": 41, "category": "旋鈕", "name": "KnobBodyDia", "zh": "旋鈕本體直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 40, "tags": ["本體"]}, {"id": 42, "category": "旋鈕", "name": "KnobBodyDepth", "zh": "旋鈕本體深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 41, "tags": ["本體"]}, {"id": 43, "category": "旋鈕", "name": "KnobCenterX", "zh": "旋鈕中心 X 座標", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 42, "tags": ["位置"]}, {"id": 44, "category": "旋鈕", "name": "KnobCenterY", "zh": "旋鈕中心 Y 座標", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 43, "tags": ["位置"]}, {"id": 45, "category": "旋鈕", "name": "KnobNutPocketDia", "zh": "旋鈕固定螺帽凹槽直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 44, "tags": ["螺帽槽"]}, {"id": 46, "category": "旋鈕", "name": "KnobNutPocketDepth", "zh": "旋鈕固定螺帽凹槽深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 45, "tags": ["螺帽槽"]}, {"id": 47, "category": "旋鈕", "name": "KnobNutAcrossFlats", "zh": "六角螺帽對邊距離", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 46, "tags": ["螺帽槽"]}, {"id": 48, "category": "旋轉編碼器", "name": "EncoderShaftHoleDia", "zh": "旋轉編碼器軸孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 47, "tags": ["軸孔"]}, {"id": 49, "category": "旋轉編碼器", "name": "EncoderCenterX", "zh": "旋轉編碼器中心 X 座標", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 48, "tags": ["位置"]}, {"id": 50, "category": "旋轉編碼器", "name": "EncoderCenterY", "zh": "旋轉編碼器中心 Y 座標", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 49, "tags": ["位置"]}, {"id": 51, "category": "旋轉編碼器", "name": "EncoderAntiRotationHoleDia", "zh": "防轉定位孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 50, "tags": ["防轉孔"]}, {"id": 52, "category": "旋轉編碼器", "name": "EncoderAntiRotationOffset", "zh": "防轉定位孔偏移", "suffix": "OffsetX", "favorite": false, "note": "", "active": true, "order": 51, "tags": ["防轉孔"]}, {"id": 53, "category": "開關", "name": "ToggleSwitchHoleDia", "zh": "撥動開關開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 52, "tags": ["撥動開關"]}, {"id": 54, "category": "開關", "name": "RockerSwitchCutoutWidth", "zh": "翹板開關開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 53, "tags": ["翹板開關"]}, {"id": 55, "category": "開關", "name": "RockerSwitchCutoutHeight", "zh": "翹板開關開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 54, "tags": ["翹板開關"]}, {"id": 56, "category": "開關", "name": "RockerSwitchCornerRadius", "zh": "翹板開關開孔圓角", "suffix": "Radius", "favorite": false, "note": "", "active": true, "order": 55, "tags": ["翹板開關"]}, {"id": 57, "category": "開關", "name": "SlideSwitchSlotWidth", "zh": "滑動開關槽寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 56, "tags": ["滑動開關"]}, {"id": 58, "category": "開關", "name": "SlideSwitchSlotHeight", "zh": "滑動開關槽高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 57, "tags": ["滑動開關"]}, {"id": 59, "category": "開關", "name": "SlideSwitchTravel", "zh": "滑動開關行程", "suffix": "Length", "favorite": false, "note": "", "active": true, "order": 58, "tags": ["滑動開關"]}, {"id": 60, "category": "顯示器", "name": "DisplayModuleWidth", "zh": "顯示模組寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 59, "tags": ["模組外形"]}, {"id": 61, "category": "顯示器", "name": "DisplayModuleHeight", "zh": "顯示模組高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 60, "tags": ["模組外形"]}, {"id": 62, "category": "顯示器", "name": "DisplayModuleDepth", "zh": "顯示模組深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 61, "tags": ["模組外形"]}, {"id": 63, "category": "顯示器", "name": "DisplayViewWidth", "zh": "顯示可視區寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 62, "tags": ["可視區"]}, {"id": 64, "category": "顯示器", "name": "DisplayViewHeight", "zh": "顯示可視區高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 63, "tags": ["可視區"]}, {"id": 65, "category": "顯示器", "name": "DisplayWindowWidth", "zh": "螢幕開窗寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 64, "tags": ["面板開窗"]}, {"id": 66, "category": "顯示器", "name": "DisplayWindowHeight", "zh": "螢幕開窗高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 65, "tags": ["面板開窗"]}, {"id": 67, "category": "顯示器", "name": "DisplayWindowCornerRadius", "zh": "螢幕開窗圓角", "suffix": "Radius", "favorite": false, "note": "", "active": true, "order": 66, "tags": ["面板開窗"]}, {"id": 68, "category": "顯示器", "name": "DisplayWindowCenterX", "zh": "螢幕開窗中心 X", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 67, "tags": ["位置"]}, {"id": 69, "category": "顯示器", "name": "DisplayWindowCenterY", "zh": "螢幕開窗中心 Y", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 68, "tags": ["位置"]}, {"id": 70, "category": "顯示器", "name": "DisplayFrameWidth", "zh": "螢幕外框寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 69, "tags": ["外框"]}, {"id": 71, "category": "顯示器", "name": "DisplayFrameHeight", "zh": "螢幕外框高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 70, "tags": ["外框"]}, {"id": 72, "category": "顯示器", "name": "DisplayFrameThickness", "zh": "螢幕外框厚度", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 71, "tags": ["外框"]}, {"id": 73, "category": "顯示器", "name": "DisplayFrameBorder", "zh": "螢幕外框邊框寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 72, "tags": ["外框"]}, {"id": 74, "category": "顯示器", "name": "DisplayRecessDepth", "zh": "螢幕內縮深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 73, "tags": ["內縮"]}, {"id": 75, "category": "顯示器", "name": "DisplayMountHoleDia", "zh": "螢幕固定孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 74, "tags": ["固定孔"]}, {"id": 76, "category": "顯示器", "name": "DisplayMountPitchX", "zh": "螢幕固定孔水平孔距", "suffix": "PitchX", "favorite": false, "note": "", "active": true, "order": 75, "tags": ["固定孔"]}, {"id": 77, "category": "顯示器", "name": "DisplayMountPitchY", "zh": "螢幕固定孔垂直孔距", "suffix": "PitchY", "favorite": false, "note": "", "active": true, "order": 76, "tags": ["固定孔"]}, {"id": 78, "category": "LED", "name": "LEDHoleDia", "zh": "LED 開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 77, "tags": ["開孔"]}, {"id": 79, "category": "LED", "name": "LEDLensDia", "zh": "LED 透鏡直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 78, "tags": ["本體"]}, {"id": 80, "category": "LED", "name": "LEDCenterX", "zh": "LED 中心 X", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 79, "tags": ["位置"]}, {"id": 81, "category": "LED", "name": "LEDCenterY", "zh": "LED 中心 Y", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 80, "tags": ["位置"]}, {"id": 82, "category": "LED", "name": "LEDPitch", "zh": "LED 間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 81, "tags": ["排列"]}, {"id": 83, "category": "LED", "name": "LEDCount", "zh": "LED 數量", "suffix": "Count", "favorite": false, "note": "", "active": true, "order": 82, "tags": ["排列"]}, {"id": 84, "category": "USB", "name": "USBCCutoutWidth", "zh": "USB Type-C 開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 83, "tags": ["Type-C"]}, {"id": 85, "category": "USB", "name": "USBCCutoutHeight", "zh": "USB Type-C 開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 84, "tags": ["Type-C"]}, {"id": 86, "category": "USB", "name": "USBCCornerRadius", "zh": "USB Type-C 開孔圓角", "suffix": "Radius", "favorite": false, "note": "", "active": true, "order": 85, "tags": ["Type-C"]}, {"id": 87, "category": "USB", "name": "USBCCenterX", "zh": "USB Type-C 中心 X", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 86, "tags": ["Type-C"]}, {"id": 88, "category": "USB", "name": "USBCCenterY", "zh": "USB Type-C 中心 Y", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 87, "tags": ["Type-C"]}, {"id": 89, "category": "USB", "name": "USBCClearance", "zh": "USB Type-C 開孔間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 88, "tags": ["Type-C"]}, {"id": 90, "category": "USB", "name": "USBACutoutWidth", "zh": "USB Type-A 開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 89, "tags": ["Type-A"]}, {"id": 91, "category": "USB", "name": "USBACutoutHeight", "zh": "USB Type-A 開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 90, "tags": ["Type-A"]}, {"id": 92, "category": "USB", "name": "MicroUSBCutoutWidth", "zh": "Micro USB 開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 91, "tags": ["Micro USB"]}, {"id": 93, "category": "USB", "name": "MicroUSBCutoutHeight", "zh": "Micro USB 開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 92, "tags": ["Micro USB"]}, {"id": 94, "category": "USB", "name": "MiniUSBCutoutWidth", "zh": "Mini USB 開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 93, "tags": ["Mini USB"]}, {"id": 95, "category": "USB", "name": "MiniUSBCutoutHeight", "zh": "Mini USB 開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 94, "tags": ["Mini USB"]}, {"id": 96, "category": "電源端子", "name": "DCJackHoleDia", "zh": "圓形 DC 插座開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 95, "tags": ["DC 插座"]}, {"id": 97, "category": "電源端子", "name": "DCJackBodyDia", "zh": "DC 插座本體直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 96, "tags": ["DC 插座"]}, {"id": 98, "category": "電源端子", "name": "DCJackCenterX", "zh": "DC 插座中心 X", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 97, "tags": ["DC 插座"]}, {"id": 99, "category": "電源端子", "name": "DCJackCenterY", "zh": "DC 插座中心 Y", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 98, "tags": ["DC 插座"]}, {"id": 100, "category": "電源端子", "name": "DCJackNutPocketDia", "zh": "DC 插座螺帽槽直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 99, "tags": ["DC 插座"]}, {"id": 101, "category": "電源端子", "name": "DCJackNutPocketDepth", "zh": "DC 插座螺帽槽深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 100, "tags": ["DC 插座"]}, {"id": 102, "category": "音訊端子", "name": "AudioJackHoleDia", "zh": "3.5 mm 音源孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 101, "tags": ["音源孔"]}, {"id": 103, "category": "音訊端子", "name": "RCAJackHoleDia", "zh": "RCA 插座開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 102, "tags": ["RCA"]}, {"id": 104, "category": "音訊端子", "name": "RCAJackPitch", "zh": "RCA 插座間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 103, "tags": ["RCA"]}, {"id": 105, "category": "音訊端子", "name": "BananaJackHoleDia", "zh": "香蕉插座開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 104, "tags": ["香蕉插座"]}, {"id": 106, "category": "音訊端子", "name": "BananaJackPitch", "zh": "香蕉插座間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 105, "tags": ["香蕉插座"]}, {"id": 107, "category": "網路與影像", "name": "RJ45CutoutWidth", "zh": "RJ45 開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 106, "tags": ["RJ45"]}, {"id": 108, "category": "網路與影像", "name": "RJ45CutoutHeight", "zh": "RJ45 開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 107, "tags": ["RJ45"]}, {"id": 109, "category": "網路與影像", "name": "RJ45LatchClearance", "zh": "RJ45 卡榫避讓空間", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 108, "tags": ["RJ45"]}, {"id": 110, "category": "網路與影像", "name": "HDMICutoutWidth", "zh": "HDMI 開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 109, "tags": ["HDMI"]}, {"id": 111, "category": "網路與影像", "name": "HDMICutoutHeight", "zh": "HDMI 開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 110, "tags": ["HDMI"]}, {"id": 112, "category": "網路與影像", "name": "DisplayPortCutoutWidth", "zh": "DisplayPort 開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 111, "tags": ["DisplayPort"]}, {"id": 113, "category": "網路與影像", "name": "DisplayPortCutoutHeight", "zh": "DisplayPort 開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 112, "tags": ["DisplayPort"]}, {"id": 114, "category": "端子台", "name": "TerminalCutoutWidth", "zh": "端子台開孔寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 113, "tags": ["通用端子台"]}, {"id": 115, "category": "端子台", "name": "TerminalCutoutHeight", "zh": "端子台開孔高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 114, "tags": ["通用端子台"]}, {"id": 116, "category": "端子台", "name": "TerminalPitch", "zh": "端子中心間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 115, "tags": ["通用端子台"]}, {"id": 117, "category": "端子台", "name": "TerminalCount", "zh": "端子數量", "suffix": "Count", "favorite": false, "note": "", "active": true, "order": 116, "tags": ["通用端子台"]}, {"id": 118, "category": "端子台", "name": "BarrierTerminalPitch", "zh": "柵欄式端子間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 117, "tags": ["柵欄式端子"]}, {"id": 119, "category": "端子台", "name": "PluggableTerminalPitch", "zh": "插拔式端子間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 118, "tags": ["插拔式端子"]}, {"id": 120, "category": "端子台", "name": "GXConnectorHoleDia", "zh": "GX 航空插頭開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 119, "tags": ["航空插頭"]}, {"id": 121, "category": "端子台", "name": "GXConnectorKeySlotWidth", "zh": "GX 防呆槽寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 120, "tags": ["航空插頭"]}, {"id": 122, "category": "端子台", "name": "GXConnectorKeySlotDepth", "zh": "GX 防呆槽深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 121, "tags": ["航空插頭"]}, {"id": 123, "category": "線材", "name": "CablePassHoleDia", "zh": "單純穿線孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 122, "tags": ["穿線孔"]}, {"id": 124, "category": "線材", "name": "CablePassCenterX", "zh": "穿線孔中心 X", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 123, "tags": ["穿線孔"]}, {"id": 125, "category": "線材", "name": "CablePassCenterY", "zh": "穿線孔中心 Y", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 124, "tags": ["穿線孔"]}, {"id": 126, "category": "線材", "name": "GrommetHoleDia", "zh": "護線環安裝孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 125, "tags": ["護線環"]}, {"id": 127, "category": "線材", "name": "GrommetOuterDia", "zh": "護線環外徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 126, "tags": ["護線環"]}, {"id": 128, "category": "線材", "name": "GrommetGrooveWidth", "zh": "護線環溝槽寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 127, "tags": ["護線環"]}, {"id": 129, "category": "線材", "name": "CableGlandHoleDia", "zh": "電纜固定頭開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 128, "tags": ["電纜固定頭"]}, {"id": 130, "category": "線材", "name": "CableGlandThreadDia", "zh": "電纜固定頭螺紋直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 129, "tags": ["電纜固定頭"]}, {"id": 131, "category": "線材", "name": "CableGlandNutDia", "zh": "電纜固定頭螺帽直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 130, "tags": ["電纜固定頭"]}, {"id": 132, "category": "線材", "name": "StrainReliefCutoutWidth", "zh": "電線拉力固定口寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 131, "tags": ["拉力固定"]}, {"id": 133, "category": "線材", "name": "StrainReliefCutoutHeight", "zh": "電線拉力固定口高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 132, "tags": ["拉力固定"]}, {"id": 134, "category": "線材", "name": "CableTieSlotWidth", "zh": "束帶固定槽寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 133, "tags": ["束帶槽"]}, {"id": 135, "category": "線材", "name": "CableTieSlotHeight", "zh": "束帶固定槽高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 134, "tags": ["束帶槽"]}, {"id": 136, "category": "線材", "name": "CableTieSlotPitch", "zh": "束帶固定槽間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 135, "tags": ["束帶槽"]}, {"id": 137, "category": "線材", "name": "CableClampWidth", "zh": "電線壓板寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 136, "tags": ["壓板"]}, {"id": 138, "category": "線材", "name": "CableClampThickness", "zh": "電線壓板厚度", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 137, "tags": ["壓板"]}, {"id": 139, "category": "線材", "name": "CableClampScrewDia", "zh": "電線壓板螺絲孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 138, "tags": ["壓板"]}, {"id": 140, "category": "電池", "name": "BatteryLength", "zh": "電池本體長度", "suffix": "Length", "favorite": false, "note": "", "active": true, "order": 139, "tags": ["電池本體"]}, {"id": 141, "category": "電池", "name": "BatteryWidth", "zh": "電池本體寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 140, "tags": ["電池本體"]}, {"id": 142, "category": "電池", "name": "BatteryHeight", "zh": "電池本體高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 141, "tags": ["電池本體"]}, {"id": 143, "category": "電池", "name": "BatteryCellDia", "zh": "圓柱電池直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 142, "tags": ["圓柱電池"]}, {"id": 144, "category": "電池", "name": "BatteryCellLength", "zh": "圓柱電池長度", "suffix": "Length", "favorite": false, "note": "", "active": true, "order": 143, "tags": ["圓柱電池"]}, {"id": 145, "category": "電池", "name": "BatteryCellCount", "zh": "電池數量", "suffix": "Count", "favorite": false, "note": "", "active": true, "order": 144, "tags": ["排列"]}, {"id": 146, "category": "電池", "name": "BatteryBayLength", "zh": "電池槽長度", "suffix": "Length", "favorite": false, "note": "", "active": true, "order": 145, "tags": ["電池盒"]}, {"id": 147, "category": "電池", "name": "BatteryBayWidth", "zh": "電池槽寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 146, "tags": ["電池盒"]}, {"id": 148, "category": "電池", "name": "BatteryBayHeight", "zh": "電池槽高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 147, "tags": ["電池盒"]}, {"id": 149, "category": "電池", "name": "BatteryBayClearance", "zh": "電池槽間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 148, "tags": ["電池盒"]}, {"id": 150, "category": "電池", "name": "BatteryCellPitch", "zh": "電池中心間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 149, "tags": ["排列"]}, {"id": 151, "category": "電池", "name": "BatteryContactGap", "zh": "電池接點間隙", "suffix": "Gap", "favorite": false, "note": "", "active": true, "order": 150, "tags": ["接點"]}, {"id": 152, "category": "電池", "name": "BatteryCoverLength", "zh": "電池蓋長度", "suffix": "Length", "favorite": false, "note": "", "active": true, "order": 151, "tags": ["電池蓋"]}, {"id": 153, "category": "電池", "name": "BatteryCoverWidth", "zh": "電池蓋寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 152, "tags": ["電池蓋"]}, {"id": 154, "category": "電池", "name": "BatteryCoverThickness", "zh": "電池蓋厚度", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 153, "tags": ["電池蓋"]}, {"id": 155, "category": "電池", "name": "BatteryCoverClearance", "zh": "電池蓋配合間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 154, "tags": ["電池蓋"]}, {"id": 156, "category": "電池", "name": "BatteryCoverLipWidth", "zh": "電池蓋唇邊寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 155, "tags": ["電池蓋"]}, {"id": 157, "category": "電池", "name": "BatteryCoverLipDepth", "zh": "電池蓋唇邊深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 156, "tags": ["電池蓋"]}, {"id": 158, "category": "電池", "name": "BatteryLatchWidth", "zh": "電池蓋卡扣寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 157, "tags": ["卡扣"]}, {"id": 159, "category": "電池", "name": "BatteryLatchHeight", "zh": "電池蓋卡扣高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 158, "tags": ["卡扣"]}, {"id": 160, "category": "PCB", "name": "PCBLength", "zh": "PCB 長度", "suffix": "Length", "favorite": false, "note": "", "active": true, "order": 159, "tags": ["PCB 外形"]}, {"id": 161, "category": "PCB", "name": "PCBWidth", "zh": "PCB 寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 160, "tags": ["PCB 外形"]}, {"id": 162, "category": "PCB", "name": "PCBThickness", "zh": "PCB 厚度", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 161, "tags": ["PCB 外形"]}, {"id": 163, "category": "PCB", "name": "PCBClearance", "zh": "PCB 與外殼間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 162, "tags": ["PCB 外形"]}, {"id": 164, "category": "PCB", "name": "PCBCenterX", "zh": "PCB 中心 X", "suffix": "CenterX", "favorite": false, "note": "", "active": true, "order": 163, "tags": ["位置"]}, {"id": 165, "category": "PCB", "name": "PCBCenterY", "zh": "PCB 中心 Y", "suffix": "CenterY", "favorite": false, "note": "", "active": true, "order": 164, "tags": ["位置"]}, {"id": 166, "category": "PCB", "name": "PCBOffsetZ", "zh": "PCB Z 軸偏移", "suffix": "OffsetZ", "favorite": false, "note": "", "active": true, "order": 165, "tags": ["位置"]}, {"id": 167, "category": "PCB", "name": "PCBHoleDia", "zh": "PCB 安裝孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 166, "tags": ["固定孔"]}, {"id": 168, "category": "PCB", "name": "PCBHolePitchX", "zh": "PCB 安裝孔水平孔距", "suffix": "PitchX", "favorite": false, "note": "", "active": true, "order": 167, "tags": ["固定孔"]}, {"id": 169, "category": "PCB", "name": "PCBHolePitchY", "zh": "PCB 安裝孔垂直孔距", "suffix": "PitchY", "favorite": false, "note": "", "active": true, "order": 168, "tags": ["固定孔"]}, {"id": 170, "category": "PCB", "name": "PCBStandoffOuterDia", "zh": "PCB 固定柱外徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 169, "tags": ["固定柱"]}, {"id": 171, "category": "PCB", "name": "PCBStandoffInnerDia", "zh": "PCB 固定柱內孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 170, "tags": ["固定柱"]}, {"id": 172, "category": "PCB", "name": "PCBStandoffHeight", "zh": "PCB 固定柱高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 171, "tags": ["固定柱"]}, {"id": 173, "category": "PCB", "name": "PCBStandoffFillet", "zh": "PCB 固定柱根部圓角", "suffix": "Fillet", "favorite": false, "note": "", "active": true, "order": 172, "tags": ["固定柱"]}, {"id": 174, "category": "PCB", "name": "PCBInsertHoleDia", "zh": "熱熔銅螺母孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 173, "tags": ["熱熔銅螺母"]}, {"id": 175, "category": "PCB", "name": "PCBInsertDepth", "zh": "熱熔銅螺母孔深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 174, "tags": ["熱熔銅螺母"]}, {"id": 176, "category": "螺絲", "name": "ScrewHoleDia", "zh": "螺絲通孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 175, "tags": ["通孔"]}, {"id": 177, "category": "螺絲", "name": "ScrewPilotHoleDia", "zh": "螺絲底孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 176, "tags": ["底孔"]}, {"id": 178, "category": "螺絲", "name": "ScrewEdgeX", "zh": "螺絲孔距左右邊緣", "suffix": "EdgeX", "favorite": false, "note": "", "active": true, "order": 177, "tags": ["位置"]}, {"id": 179, "category": "螺絲", "name": "ScrewEdgeY", "zh": "螺絲孔距上下邊緣", "suffix": "EdgeY", "favorite": false, "note": "", "active": true, "order": 178, "tags": ["位置"]}, {"id": 180, "category": "螺絲", "name": "ScrewPitchX", "zh": "螺絲孔水平孔距", "suffix": "PitchX", "favorite": false, "note": "", "active": true, "order": 179, "tags": ["孔距"]}, {"id": 181, "category": "螺絲", "name": "ScrewPitchY", "zh": "螺絲孔垂直孔距", "suffix": "PitchY", "favorite": false, "note": "", "active": true, "order": 180, "tags": ["孔距"]}, {"id": 182, "category": "螺絲", "name": "CountersinkDia", "zh": "沉頭孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 181, "tags": ["沉頭孔"]}, {"id": 183, "category": "螺絲", "name": "CountersinkDepth", "zh": "沉頭孔深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 182, "tags": ["沉頭孔"]}, {"id": 184, "category": "螺絲", "name": "CountersinkAngle", "zh": "沉頭孔角度", "suffix": "Angle", "favorite": false, "note": "", "active": true, "order": 183, "tags": ["沉頭孔"]}, {"id": 185, "category": "螺絲", "name": "CounterboreDia", "zh": "沉孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 184, "tags": ["沉孔"]}, {"id": 186, "category": "螺絲", "name": "CounterboreDepth", "zh": "沉孔深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 185, "tags": ["沉孔"]}, {"id": 187, "category": "螺絲", "name": "NutAcrossFlats", "zh": "六角螺帽對邊距離", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 186, "tags": ["螺帽槽"]}, {"id": 188, "category": "螺絲", "name": "NutPocketDepth", "zh": "螺帽槽深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 187, "tags": ["螺帽槽"]}, {"id": 189, "category": "上蓋", "name": "LidWidth", "zh": "上蓋寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 188, "tags": ["基本尺寸"]}, {"id": 190, "category": "上蓋", "name": "LidHeight", "zh": "上蓋高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 189, "tags": ["基本尺寸"]}, {"id": 191, "category": "上蓋", "name": "LidThickness", "zh": "上蓋厚度", "suffix": "Thickness", "favorite": false, "note": "", "active": true, "order": 190, "tags": ["基本尺寸"]}, {"id": 192, "category": "上蓋", "name": "LidClearance", "zh": "上蓋配合間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 191, "tags": ["配合"]}, {"id": 193, "category": "上蓋", "name": "LidLipWidth", "zh": "上蓋唇邊寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 192, "tags": ["配合"]}, {"id": 194, "category": "上蓋", "name": "LidLipDepth", "zh": "上蓋唇邊深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 193, "tags": ["配合"]}, {"id": 195, "category": "上蓋", "name": "CaseFitClearance", "zh": "上下殼配合間隙", "suffix": "Clearance", "favorite": false, "note": "", "active": true, "order": 194, "tags": ["配合"]}, {"id": 196, "category": "上蓋", "name": "SnapHookWidth", "zh": "卡扣寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 195, "tags": ["卡扣"]}, {"id": 197, "category": "上蓋", "name": "SnapHookHeight", "zh": "卡扣高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 196, "tags": ["卡扣"]}, {"id": 198, "category": "上蓋", "name": "SnapHookDepth", "zh": "卡扣深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 197, "tags": ["卡扣"]}, {"id": 199, "category": "散熱", "name": "VentHoleDia", "zh": "通風圓孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 198, "tags": ["圓孔"]}, {"id": 200, "category": "散熱", "name": "VentHolePitchX", "zh": "通風孔水平間距", "suffix": "PitchX", "favorite": false, "note": "", "active": true, "order": 199, "tags": ["圓孔"]}, {"id": 201, "category": "散熱", "name": "VentHolePitchY", "zh": "通風孔垂直間距", "suffix": "PitchY", "favorite": false, "note": "", "active": true, "order": 200, "tags": ["圓孔"]}, {"id": 202, "category": "散熱", "name": "VentSlotWidth", "zh": "通風槽寬度", "suffix": "Width", "favorite": false, "note": "", "active": true, "order": 201, "tags": ["長槽"]}, {"id": 203, "category": "散熱", "name": "VentSlotHeight", "zh": "通風槽高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 202, "tags": ["長槽"]}, {"id": 204, "category": "散熱", "name": "VentSlotPitch", "zh": "通風槽間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 203, "tags": ["長槽"]}, {"id": 205, "category": "散熱", "name": "VentSlotCount", "zh": "通風槽數量", "suffix": "Count", "favorite": false, "note": "", "active": true, "order": 204, "tags": ["長槽"]}, {"id": 206, "category": "散熱", "name": "FanCutoutDia", "zh": "風扇主開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 205, "tags": ["風扇"]}, {"id": 207, "category": "散熱", "name": "FanMountHoleDia", "zh": "風扇固定孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 206, "tags": ["風扇"]}, {"id": 208, "category": "散熱", "name": "FanMountPitch", "zh": "風扇固定孔距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 207, "tags": ["風扇"]}, {"id": 209, "category": "聲音", "name": "SpeakerCutoutDia", "zh": "喇叭主開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 208, "tags": ["喇叭"]}, {"id": 210, "category": "聲音", "name": "SpeakerGrilleHoleDia", "zh": "喇叭網孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 209, "tags": ["喇叭"]}, {"id": 211, "category": "聲音", "name": "SpeakerGrillePitch", "zh": "喇叭網孔間距", "suffix": "Pitch", "favorite": false, "note": "", "active": true, "order": 210, "tags": ["喇叭"]}, {"id": 212, "category": "聲音", "name": "BuzzerHoleDia", "zh": "蜂鳴器開孔直徑", "suffix": "Dia", "favorite": false, "note": "", "active": true, "order": 211, "tags": ["蜂鳴器"]}, {"id": 213, "category": "標示", "name": "TextHeight", "zh": "文字高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 212, "tags": ["文字"]}, {"id": 214, "category": "標示", "name": "TextDepth", "zh": "文字深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 213, "tags": ["文字"]}, {"id": 215, "category": "標示", "name": "TextEmbossHeight", "zh": "浮雕文字高度", "suffix": "Height", "favorite": false, "note": "", "active": true, "order": 214, "tags": ["文字"]}, {"id": 216, "category": "標示", "name": "TextEngraveDepth", "zh": "凹刻文字深度", "suffix": "Depth", "favorite": false, "note": "", "active": true, "order": 215, "tags": ["文字"]}, {"id": 217, "category": "模板", "name": "TemplateScale", "zh": "定位模板比例", "suffix": "Scale", "favorite": false, "note": "", "active": true, "order": 216, "tags": ["TechDraw"]}, {"id": 218, "category": "模板", "name": "TemplateMarginX", "zh": "模板水平邊界", "suffix": "MarginX", "favorite": false, "note": "", "active": true, "order": 217, "tags": ["TechDraw"]}, {"id": 219, "category": "模板", "name": "TemplateMarginY", "zh": "模板垂直邊界", "suffix": "MarginY", "favorite": false, "note": "", "active": true, "order": 218, "tags": ["TechDraw"]}, {"id": 220, "category": "模板", "name": "CenterMarkSize", "zh": "中心標記大小", "suffix": "Size", "favorite": false, "note": "", "active": true, "order": 219, "tags": ["TechDraw"]}];
+const KEY = 'freecad_param_dictionary_v2';
+
+let state = loadState();
+let favOnly = false;
+let expandedIds = new Set();
+let activeProjectId = state.projects[0]?.id || null;
+let dictSelectMode=false, selectedDictIds=new Set();
+let projectSelectMode=false, selectedSubgroupIds=new Set(), selectedCardIds=new Set();
+
+function normalizeState(raw){
+  const dict = Array.isArray(raw?.items) ? raw.items : (Array.isArray(raw) ? raw : structuredClone(BUILTIN));
+  const items = dict.map((x,i)=>({
+    id:Number(x.id)||i+1,
+    category:x.category||'未分類',
+    name:x.name||'Unnamed',
+    zh:x.zh||x.name||'未命名',
+    suffix:x.suffix||'',
+    tags:Array.isArray(x.tags)?x.tags:(x.group?[x.group]:[]),
+    favorite:Boolean(x.favorite),
+    note:x.note||'',
+    active:x.active!==false,
+    order:Number.isFinite(x.order)?x.order:i
+  }));
+  return {
+    items,
+    projects:Array.isArray(raw?.projects)?raw.projects:[],
+    nextProjectId:Number(raw?.nextProjectId)||1,
+    nextSubgroupId:Number(raw?.nextSubgroupId)||1
+  };
+}
+function loadState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(KEY));
+    if(saved) return normalizeState(saved);
+    const old=JSON.parse(localStorage.getItem('freecad_param_dictionary_v1'));
+    return normalizeState(old || {items:structuredClone(BUILTIN)});
+  }catch(e){ return normalizeState({items:structuredClone(BUILTIN)}); }
+}
+function saveState(){ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn('無法寫入瀏覽器儲存空間',e)} }
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.remove('success','error');
+  if(type) el.classList.add(type);
+  el.classList.add('show');
+  clearTimeout(window.__toast);
+  window.__toast=setTimeout(()=>{
+    el.classList.remove('show','success','error');
+  },1800);
+}
+/* ---------- 共用：相片風格＋多選堆疊拖曳排序 ---------- */
+const DRAG_V={scale:1.04,shadow:'0 8px 20px rgba(15,23,42,.22)',rotate:' rotate(-1.5deg)'};
+function heightCache(container,selector){
+  const m=new Map();
+  container.querySelectorAll(selector).forEach(el=>{
+    const id=Number(el.dataset.id ?? el.dataset.cardId ?? el.dataset.subgroupId);
+    if(!el.classList.contains('dragging'))m.set(id,el.getBoundingClientRect().height);
+  });
+  return m;
+}
+function indexByPointer(container,otherIds,cache,gap,clientY,fallback=56){
+  const rect=container.getBoundingClientRect();
+  const y=clientY-rect.top;
+  let cum=0;
+  for(let i=0;i<otherIds.length;i++){
+    const h=cache.get(otherIds[i])||fallback;
+    if(y<cum+h/2)return i;
+    cum+=h+gap;
+  }
+  return otherIds.length;
+}
+function mergeReorderedSubset(fullIds,visibleIdsOriginal,newVisibleSeq){
+  const positions=visibleIdsOriginal.map(id=>fullIds.indexOf(id)).sort((a,b)=>a-b);
+  const out=[...fullIds];
+  newVisibleSeq.forEach((id,i)=>{ out[positions[i]]=id; });
+  return out;
+}
+function addStack(el,count){
+  el.querySelectorAll('.ghost-stack').forEach(g=>g.remove());
+  const layers=Math.min(count-1,2);
+  for(let i=layers;i>=1;i--){
+    const g=document.createElement('div');
+    g.className='ghost-stack';
+    g.style.transform='translate('+(i*5)+'px,'+(i*5)+'px) rotate('+(i*3)+'deg)';
+    g.style.opacity=String(0.9-i*0.18);
+    el.insertBefore(g,el.firstChild);
+  }
+  const old=el.querySelector('.count-badge');if(old)old.remove();
+  if(count>1){
+    const badge=document.createElement('span');
+    badge.className='count-badge';badge.textContent=String(count);
+    el.appendChild(badge);
+  }
+}
+function setDragVisual(el,dy){
+  el.style.transform='translateY('+dy+'px) scale('+DRAG_V.scale+')'+DRAG_V.rotate;
+  el.style.boxShadow=DRAG_V.shadow;
+}
+function clearDragVisual(el){
+  el.style.transition='transform .22s cubic-bezier(.2,.8,.3,1.2)';
+  el.style.transform='';el.style.boxShadow='';
+  setTimeout(()=>{el.style.zIndex='';el.style.transition='';},220);
+}
+function flipOthers(container,selector,firstRects,excludeIds){
+  container.querySelectorAll(selector).forEach(r=>{
+    const id=Number(r.dataset.id ?? r.dataset.cardId ?? r.dataset.subgroupId);
+    if(excludeIds.includes(id))return;
+    const first=firstRects.get(id);if(!first)return;
+    const last=r.getBoundingClientRect();
+    const delta=first.top-last.top;
+    if(delta){
+      r.style.transition='none';r.style.transform='translateY('+delta+'px)';
+      requestAnimationFrame(()=>{
+        r.style.transition='transform .22s cubic-bezier(.2,.8,.3,1.2)';
+        r.style.transform='';
+      });
+    }
+  });
+}
+function captureRects(container,selector){
+  const m=new Map();
+  container.querySelectorAll(selector).forEach(r=>{
+    const id=Number(r.dataset.id ?? r.dataset.cardId ?? r.dataset.subgroupId);
+    m.set(id,r.getBoundingClientRect());
+  });
+  return m;
+}
+async function copyText(text){
+  const value=String(text ?? '');
+  let copied=false;
+  let verified=false;
+
+  // HTTPS／localhost 優先使用 Clipboard API。
+  if(navigator.clipboard && window.isSecureContext){
+    try{
+      await navigator.clipboard.writeText(value);
+      copied=true;
+
+      // 瀏覽器允許讀回剪貼簿時，實際比對內容。
+      if(typeof navigator.clipboard.readText==='function'){
+        try{
+          const readBack=await navigator.clipboard.readText();
+          verified=readBack===value;
+        }catch(e){
+          // 部分瀏覽器只允許寫入，不允許讀回；寫入成功仍算完成。
+        }
+      }
+    }catch(e){
+      copied=false;
+    }
+  }
+
+  // file://、部分平板瀏覽器或權限受限時，改用傳統複製方式。
+  if(!copied){
+    const ta=document.createElement('textarea');
+    ta.value=value;
+    ta.setAttribute('readonly','');
+    ta.style.position='fixed';
+    ta.style.left='-9999px';
+    ta.style.top='0';
+    ta.style.opacity='0';
+    document.body.appendChild(ta);
+    ta.focus({preventScroll:true});
+    ta.select();
+    ta.setSelectionRange(0,ta.value.length);
+    try{
+      copied=document.execCommand('copy');
+    }catch(e){
+      copied=false;
+    }
+    ta.remove();
+  }
+
+  if(copied){
+    toast(verified ? `已複製並驗證：${value}` : `已複製：${value}`,'success');
+    if(navigator.vibrate) navigator.vibrate(35);
+    return true;
+  }
+
+  // 最後備援：顯示可手動複製的文字，不假裝成功。
+  try{
+    showCopyFallback(value);
+  }catch(e){
+    console.error('顯示手動複製視窗失敗',e);
+    toast('複製失敗，請手動選取英文名稱','error');
+  }
+  return false;
+}
+function showCopyFallback(value){
+  const existing=document.getElementById('copyFallbackDialog');
+  if(existing) existing.remove();
+  const dlg=document.createElement('dialog');
+  dlg.id='copyFallbackDialog';
+  dlg.innerHTML=`<div class="modal">
+    <h2>無法自動複製</h2>
+    <p style="color:var(--muted)">瀏覽器阻擋了剪貼簿存取。請長按或全選下方文字後複製。</p>
+    <textarea id="copyFallbackText" rows="3" readonly>${esc(value)}</textarea>
+    <div class="modalfooter"><button onclick="copyFallbackDialog.close()">關閉</button></div>
+  </div>`;
+  document.body.appendChild(dlg);
+  dlg.showModal();
+  const field=document.getElementById('copyFallbackText');
+  field.focus();
+  field.select();
+  field.setSelectionRange(0,field.value.length);
+  toast('自動複製失敗，請手動複製','error');
+}
+function sortedItems(){
+  return [...state.items].sort((a,b)=>{
+    if(a.active!==b.active) return a.active?-1:1;
+    return a.order-b.order || a.id-b.id;
+  });
+}
+function refreshCategoryOptions(){
+  const el=document.getElementById('category'), current=el.value;
+  const cats=[...new Set(state.items.map(x=>x.category))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  el.innerHTML='<option value="">全部分類</option>'+cats.map(x=>`<option>${esc(x)}</option>`).join('');
+  el.value=cats.includes(current)?current:'';
+}
+function filteredItems(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const category=document.getElementById('category').value;
+  const status=document.getElementById('statusFilter').value;
+  return sortedItems().filter(x=>{
+    const hay=[x.name,x.zh,x.category,x.suffix,...x.tags,x.note].join(' ').toLowerCase();
+    return (!q||hay.includes(q)) && (!category||x.category===category) &&
+      (status==='all'||(status==='active'?x.active:!x.active)) && (!favOnly||x.favorite);
+  });
+}
+
+function projectMembershipText(cardId){
+  const names=[];
+  state.projects.forEach(p=>p.subgroups.forEach(g=>{
+    if(g.cardIds.includes(cardId)) names.push(`${p.name}／${g.name}`);
+  }));
+  return names.length ? `已指派：${names.map(esc).join('、')}` : '尚未指派到任何專案';
+}
+let assigningCardId=null;
+function openAssignDialog(cardId){
+  const item=state.items.find(x=>x.id===cardId);
+  if(!item)return;
+  if(!state.projects.length){
+    const go=confirm('目前尚未建立專案群組。要前往「專案群組」建立嗎？');
+    if(go)switchView('projects');
+    return;
+  }
+  assigningCardId=cardId;
+  assignCardName.textContent=`${item.zh}｜${item.name}`;
+  assignProject.innerHTML=[...state.projects].sort((a,b)=>a.order-b.order)
+    .map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  const preferred=activeProjectId&&state.projects.some(p=>p.id===activeProjectId)?activeProjectId:state.projects[0].id;
+  assignProject.value=String(preferred);
+  refreshAssignSubgroups();
+  assignDialog.showModal();
+}
+function refreshAssignSubgroups(){
+  const p=state.projects.find(p=>p.id===Number(assignProject.value));
+  const groups=[...(p?.subgroups||[])].sort((a,b)=>a.order-b.order);
+  assignSubgroup.innerHTML=groups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  const already=groups.filter(g=>g.cardIds.includes(assigningCardId)).map(g=>g.name);
+  if(!groups.length){
+    assignInfo.textContent='此專案尚未建立小群組。請先到「專案群組」建立小群組。';
+    confirmAssignBtn.disabled=true;
+  }else{
+    assignInfo.textContent=already.length
+      ? `這張字卡目前已在：${already.join('、')}。仍可指派到其他小群組。`
+      : '選擇要加入的小群組。';
+    confirmAssignBtn.disabled=false;
+  }
+}
+
+function renderDictionary(){
+  refreshCategoryOptions();
+  const shown=filteredItems();
+  const list=document.getElementById('cardList');
+  list.innerHTML=shown.map(x=>{
+    const expanded=expandedIds.has(x.id);
+    return `<article class="card ${expanded?'expanded':''} ${x.active?'':'paused'} ${selectedDictIds.has(x.id)?'selected':''}" data-id="${x.id}">
+      <div class="card-summary ${dictSelectMode?'has-sel':''}" onclick="toggleCard(${x.id},event)">
+        ${dictSelectMode?`<span class="sel-check ${selectedDictIds.has(x.id)?'on':''}" data-sel-dict="${x.id}">${selectedDictIds.has(x.id)?'☑':'☐'}</span>`:''}
+        <span class="drag-handle" title="拖曳排序" data-drag-id="${x.id}">☰</span>
+        <div class="card-title">
+          <div class="zh-title">${esc(x.zh)}</div>
+          <div class="en-sub">${esc(x.name)}</div>
+        </div>
+        <div class="card-flags">${x.favorite?'<span class="star">★</span>':''}${!x.active?'<span class="badge">暫停</span>':''}</div>
+        <span class="chev">⌄</span>
+      </div>
+      <div class="card-body">
+        <div class="name-code">${esc(x.name)}</div>
+        <div class="meta">
+          <span class="badge">${esc(x.category)}</span>
+          ${x.suffix?`<span class="badge">${esc(x.suffix)}</span>`:''}
+          ${x.tags.map(t=>`<span class="badge">${esc(t)}</span>`).join('')}
+        </div>
+        ${x.note?`<div class="note-preview">${esc(x.note)}</div>`:''}
+        <div class="actions">
+          <button class="soft copy-name-btn" data-copy-name="${esc(x.name)}">一鍵複製</button>
+          <button class="assign-btn" onclick="openAssignDialog(${x.id})">指派到專案</button>
+          <button onclick="toggleFav(${x.id})">${x.favorite?'取消常用':'加入常用'}</button>
+          <button onclick="editItem(${x.id})">編輯／標註</button>
+          <button class="warn" onclick="toggleActive(${x.id})">${x.active?'暫停':'繼續啟用'}</button>
+        </div>
+        <div class="assignment-status">${projectMembershipText(x.id)}</div>
+      </div>
+    </article>`;
+  }).join('');
+  document.getElementById('empty').hidden=shown.length!==0;
+  document.getElementById('stats').textContent=`顯示 ${shown.length}／${state.items.length} 筆`;
+  document.getElementById('favOnly').textContent=favOnly?'★ 顯示全部':'☆ 僅顯示常用';
+  bindCardDrag();
+}
+
+document.addEventListener('click',event=>{
+  const btn=event.target.closest('.copy-name-btn');
+  if(!btn)return;
+  event.preventDefault();
+  event.stopPropagation();
+  const value=btn.dataset.copyName||'';
+  copyText(value);
+});
+
+function toggleCard(id,event){
+  if(event.target.closest('button')||event.target.closest('.drag-handle')||event.target.closest('.sel-check')) return;
+  expandedIds.has(id)?expandedIds.delete(id):expandedIds.add(id);
+  renderDictionary();
+}
+document.addEventListener('click',event=>{
+  const chk=event.target.closest('[data-sel-dict]');
+  if(!chk)return;
+  event.preventDefault();event.stopPropagation();
+  const id=Number(chk.dataset.selDict);
+  selectedDictIds.has(id)?selectedDictIds.delete(id):selectedDictIds.add(id);
+  renderDictionary();
+});
+document.getElementById('multiSelectDictBtn').onclick=()=>{
+  dictSelectMode=!dictSelectMode;
+  document.getElementById('multiSelectDictBtn').classList.toggle('active',dictSelectMode);
+  if(!dictSelectMode)selectedDictIds.clear();
+  renderDictionary();
+};
+function toggleFav(id){const x=state.items.find(x=>x.id===id);if(!x)return;x.favorite=!x.favorite;saveState();renderDictionary()}
+function toggleActive(id){
+  const x=state.items.find(x=>x.id===id);if(!x)return;
+  x.active=!x.active;
+  if(!x.active){x.order=Math.max(0,...state.items.map(i=>i.order))+1;expandedIds.delete(id)}
+  else{x.order=Math.max(0,...state.items.filter(i=>i.active).map(i=>i.order))+1}
+  normalizeOrders();saveState();renderDictionary();renderProject();
+}
+function normalizeOrders(){
+  sortedItems().forEach((x,i)=>x.order=i);
+}
+function editItem(id){
+  const x=state.items.find(x=>x.id===id);
+  dialogTitle.textContent=x?'編輯命名':'新增命名';
+  editId.value=x?.id||'';
+  fName.value=x?.name||''; fZh.value=x?.zh||''; fCategory.value=x?.category||'';
+  fSuffix.value=x?.suffix||''; fTags.value=(x?.tags||[]).join(', ');
+  fFavorite.value=String(x?.favorite||false); fActive.value=String(x?.active!==false);
+  fNote.value=x?.note||''; editor.showModal();
+}
+saveBtn.addEventListener('click',e=>{
+  e.preventDefault();
+  const name=fName.value.trim(), zh=fZh.value.trim(), category=fCategory.value.trim();
+  if(!name||!zh||!category){toast('請填寫英文名稱、中文說明與分類');return}
+  const id=Number(editId.value);
+  const obj={
+    id:id||Math.max(0,...state.items.map(x=>x.id))+1,
+    name,zh,category,suffix:fSuffix.value.trim(),
+    tags:fTags.value.split(',').map(s=>s.trim()).filter(Boolean),
+    favorite:fFavorite.value==='true',active:fActive.value==='true',
+    note:fNote.value.trim(),
+    order:id?(state.items.find(x=>x.id===id)?.order??state.items.length):state.items.length
+  };
+  state.items=id?state.items.map(x=>x.id===id?obj:x):[...state.items,obj];
+  saveState();editor.close();renderDictionary();renderPicker();toast('已儲存');
+});
+
+function bindCardDrag(){
+  document.querySelectorAll('.drag-handle[data-drag-id]').forEach(handle=>{
+    handle.addEventListener('pointerdown',startPointerDrag);
+  });
+}
+let dictDrag=null;
+function startPointerDrag(e){
+  if(e.pointerType==='mouse' && e.button!==0) return;
+  e.preventDefault();
+  const card=e.currentTarget.closest('.card');
+  const id=Number(card.dataset.id);
+  const primary=state.items.find(x=>x.id===id);
+  const group=(dictSelectMode&&selectedDictIds.has(id)&&selectedDictIds.size>1)
+    ? sortedItems().filter(x=>selectedDictIds.has(x.id)&&x.active===primary.active).map(x=>x.id)
+    : [id];
+  const cardListEl=document.getElementById('cardList');
+  const gap=parseFloat(getComputedStyle(cardListEl).rowGap)||8;
+  const cache=heightCache(cardListEl,'.card');
+  dictDrag={ids:group,primary:id,pointerId:e.pointerId,startY:e.clientY,cache,gap,lastIndex:null};
+  card.setPointerCapture(e.pointerId);
+  card.classList.add('dragging');card.style.zIndex='30';card.style.transition='none';
+  if(group.length>1){
+    document.querySelectorAll('.card').forEach(c=>{if(group.includes(Number(c.dataset.id))&&Number(c.dataset.id)!==id)c.style.display='none'});
+    addStack(card,group.length);
+  }
+  window.addEventListener('pointermove',dictPointerMove);
+  window.addEventListener('pointerup',dictPointerUp,{once:true});
+}
+function dictPointerMove(e){
+  if(!dictDrag)return;
+  const cardListEl=document.getElementById('cardList');
+  const card=cardListEl.querySelector('.card[data-id="'+dictDrag.primary+'"]');
+  if(!card)return;
+  const dy=e.clientY-dictDrag.startY;
+  setDragVisual(card,dy);
+  const primary=state.items.find(x=>x.id===dictDrag.primary);
+  const shownIds=filteredItems().filter(x=>x.active===primary.active).map(x=>x.id);
+  const otherIds=shownIds.filter(x=>!dictDrag.ids.includes(x));
+  const newIndex=indexByPointer(cardListEl,otherIds,dictDrag.cache,dictDrag.gap,e.clientY);
+  if(newIndex===dictDrag.lastIndex)return;
+  dictDrag.lastIndex=newIndex;
+  const newVisibleSeq=[...otherIds];
+  newVisibleSeq.splice(newIndex,0,...dictDrag.ids);
+  const trueIds=sortedItems().filter(x=>x.active===primary.active).map(x=>x.id);
+  const merged=mergeReorderedSubset(trueIds,shownIds,newVisibleSeq);
+  const activeIds=primary.active?merged:sortedItems().filter(x=>x.active).map(x=>x.id);
+  const pausedIds=!primary.active?merged:sortedItems().filter(x=>!x.active).map(x=>x.id);
+  [...activeIds,...pausedIds].forEach((iid,i)=>{const it=state.items.find(x=>x.id===iid);if(it)it.order=i});
+  const firstRects=captureRects(cardListEl,'.card');
+  renderDictionary();
+  const newCard=document.querySelector('.card[data-id="'+dictDrag.primary+'"]');
+  if(newCard){
+    newCard.classList.add('dragging');newCard.style.zIndex='30';newCard.style.transition='none';
+    setDragVisual(newCard,dy);
+    try{newCard.setPointerCapture(dictDrag.pointerId);}catch(err){}
+    if(dictDrag.ids.length>1){
+      document.querySelectorAll('.card').forEach(c=>{if(dictDrag.ids.includes(Number(c.dataset.id))&&Number(c.dataset.id)!==dictDrag.primary)c.style.display='none'});
+      addStack(newCard,dictDrag.ids.length);
+    }
+    flipOthers(document.getElementById('cardList'),'.card',firstRects,dictDrag.ids);
+  }
+}
+function dictPointerUp(){
+  if(!dictDrag)return;
+  const card=document.querySelector('.card[data-id="'+dictDrag.primary+'"]');
+  if(card){card.classList.remove('dragging');clearDragVisual(card);}
+  window.removeEventListener('pointermove',dictPointerMove);
+  saveState();
+  dictDrag=null;
+  setTimeout(()=>renderDictionary(),220);
+}
+
+function switchView(which){
+  const dict=which==='dictionary';
+  dictionaryView.classList.toggle('hidden',!dict);projectsView.classList.toggle('hidden',dict);
+  tabDictionary.classList.toggle('active',dict);tabProjects.classList.toggle('active',!dict);
+  if(!dict)renderProjects();
+}
+tabDictionary.onclick=()=>switchView('dictionary');tabProjects.onclick=()=>switchView('projects');
+
+function newProject(editIdValue=null){
+  const p=editIdValue?state.projects.find(p=>p.id===editIdValue):null;
+  projectDialogTitle.textContent=p?'重新命名專案':'新增專案';
+  projectEditId.value=p?.id||'';projectName.value=p?.name||'';projectDialog.showModal();
+}
+saveProjectBtn.onclick=e=>{
+  e.preventDefault();const name=projectName.value.trim();if(!name){toast('請輸入專案名稱');return}
+  const id=Number(projectEditId.value);
+  if(id){state.projects.find(p=>p.id===id).name=name}
+  else{
+    const pid=state.nextProjectId++;
+    state.projects.push({id:pid,name,order:state.projects.length,subgroups:[]});
+    activeProjectId=pid;
+  }
+  saveState();projectDialog.close();renderProjects();
+};
+function currentProject(){return state.projects.find(p=>p.id===activeProjectId)}
+function renderProjects(){
+  projectList.innerHTML=[...state.projects].sort((a,b)=>a.order-b.order).map(p=>
+    `<button class="${p.id===activeProjectId?'active':''}" onclick="selectProject(${p.id})">${esc(p.name)}</button>`).join('');
+  renderProject();
+}
+function selectProject(id){activeProjectId=id;renderProjects()}
+function renderProject(){
+  const p=currentProject();
+  projectEmpty.classList.toggle('hidden',!!p);projectContent.classList.toggle('hidden',!p);
+  if(!p)return;
+  projectTitle.textContent=p.name;
+  const groups=[...p.subgroups].sort((a,b)=>a.order-b.order);
+  subgroupList.innerHTML=groups.map(g=>`<section class="subgroup ${selectedSubgroupIds.has(g.id)?'selected':''}" data-subgroup-id="${g.id}">
+    <div class="subgroup-head">
+      ${projectSelectMode?`<span class="sel-check ${selectedSubgroupIds.has(g.id)?'on':''}" data-sel-subgroup="${g.id}">${selectedSubgroupIds.has(g.id)?'☑':'☐'}</span>`:''}
+      <span class="drag-handle subgroup-handle" title="拖曳小群組">☰</span>
+      <strong>${esc(g.name)}</strong>
+      <button onclick="renameSubgroup(${g.id})">改名</button>
+      <button class="warn" onclick="removeSubgroup(${g.id})">移除</button>
+    </div>
+    <div class="subgroup-body" data-drop-subgroup="${g.id}">
+      ${g.cardIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean).map(x=>`
+        <div class="project-card ${x.active?'':'paused'} ${projectSelectMode?'has-sel':''} ${selectedCardIds.has(x.id)?'selected':''}" data-card-id="${x.id}" data-subgroup-id="${g.id}">
+          ${projectSelectMode?`<span class="sel-check ${selectedCardIds.has(x.id)?'on':''}" data-sel-card="${x.id}">${selectedCardIds.has(x.id)?'☑':'☐'}</span>`:''}
+          <span class="drag-handle project-card-handle">☰</span>
+          <div><div class="zh-title">${esc(x.zh)}</div><div class="en-sub">${esc(x.name)}</div></div>
+          <button onclick="removeCardFromProject(${g.id},${x.id})">移除</button>
+        </div>`).join('')}
+    </div>
+  </section>`).join('') || '<div class="empty">尚未建立小群組。先按「＋ 小群組」。</div>';
+  bindProjectDrag();
+}
+function addSubgroup(){
+  if(!currentProject())return;
+  subgroupName.value='';subgroupDialog.showModal();
+}
+saveSubgroupBtn.onclick=e=>{
+  e.preventDefault();const name=subgroupName.value.trim();if(!name){toast('請輸入小群組名稱');return}
+  const p=currentProject(), id=state.nextSubgroupId++;
+  p.subgroups.push({id,name,order:p.subgroups.length,cardIds:[]});
+  saveState();subgroupDialog.close();renderProject();
+};
+function renameSubgroup(id){
+  const g=currentProject().subgroups.find(g=>g.id===id);const name=prompt('小群組名稱',g.name);
+  if(name?.trim()){g.name=name.trim();saveState();renderProject()}
+}
+function removeSubgroup(id){
+  const p=currentProject(),g=p.subgroups.find(g=>g.id===id);
+  if(!confirm(`移除小群組「${g.name}」？其中字卡只會從此專案移除，不會刪除字典。`))return;
+  p.subgroups=p.subgroups.filter(g=>g.id!==id);saveState();renderProject();
+}
+function removeCardFromProject(gid,cid){
+  const g=currentProject().subgroups.find(g=>g.id===gid);g.cardIds=g.cardIds.filter(id=>id!==cid);saveState();renderProject();renderPicker();renderDictionary();
+}
+document.addEventListener('click',event=>{
+  const sg=event.target.closest('[data-sel-subgroup]');
+  if(sg){
+    event.preventDefault();event.stopPropagation();
+    const id=Number(sg.dataset.selSubgroup);
+    selectedSubgroupIds.has(id)?selectedSubgroupIds.delete(id):selectedSubgroupIds.add(id);
+    renderProject();return;
+  }
+  const cc=event.target.closest('[data-sel-card]');
+  if(cc){
+    event.preventDefault();event.stopPropagation();
+    const id=Number(cc.dataset.selCard);
+    selectedCardIds.has(id)?selectedCardIds.delete(id):selectedCardIds.add(id);
+    renderProject();return;
+  }
+});
+document.getElementById('multiSelectProjectBtn').onclick=()=>{
+  projectSelectMode=!projectSelectMode;
+  document.getElementById('multiSelectProjectBtn').classList.toggle('active',projectSelectMode);
+  if(!projectSelectMode){selectedSubgroupIds.clear();selectedCardIds.clear();}
+  renderProject();
+};
+function renderPicker(){
+  const p=currentProject();if(!p)return;
+  pickerSubgroup.innerHTML=[...p.subgroups].sort((a,b)=>a.order-b.order).map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  const q=pickerSearch.value.trim().toLowerCase();
+  const assigned=new Set(p.subgroups.flatMap(g=>g.cardIds));
+  const list=sortedItems().filter(x=>x.active&&!assigned.has(x.id)&&(!q||[x.name,x.zh,x.category,...x.tags].join(' ').toLowerCase().includes(q)));
+  pickerList.innerHTML=list.map(x=>`<div class="project-card">
+    <span></span><div><div class="zh-title">${esc(x.zh)}</div><div class="en-sub">${esc(x.name)}</div></div>
+    <button onclick="addCardToProject(${x.id})">加入</button>
+  </div>`).join('')||'<div class="empty">沒有可加入的字卡。</div>';
+}
+function openPicker(){
+  const p=currentProject();if(!p?.subgroups.length){toast('請先建立至少一個小群組');return}
+  pickerSearch.value='';renderPicker();pickerDialog.showModal();
+}
+function addCardToProject(cid){
+  const gid=Number(pickerSubgroup.value),g=currentProject().subgroups.find(g=>g.id===gid);
+  if(!g.cardIds.includes(cid))g.cardIds.push(cid);saveState();renderPicker();renderProject();toast('已加入專案');
+}
+function bindProjectDrag(){
+  document.querySelectorAll('.subgroup-handle').forEach(h=>h.addEventListener('pointerdown',startSubgroupDrag));
+  document.querySelectorAll('.project-card-handle').forEach(h=>h.addEventListener('pointerdown',startCardDrag));
+}
+/* ---- 小群組排序：單一容器，高度不一致，用高度快取＋游標位置判斷 ---- */
+let subDrag=null;
+function startSubgroupDrag(e){
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  e.preventDefault();
+  const el=e.currentTarget.closest('.subgroup');
+  const id=Number(el.dataset.subgroupId);
+  const p=currentProject();
+  const ordered=[...p.subgroups].sort((a,b)=>a.order-b.order);
+  const group=(projectSelectMode&&selectedSubgroupIds.has(id)&&selectedSubgroupIds.size>1)
+    ? ordered.filter(g=>selectedSubgroupIds.has(g.id)).map(g=>g.id)
+    : [id];
+  const listEl=document.getElementById('subgroupList');
+  const gap=parseFloat(getComputedStyle(listEl).rowGap)||10;
+  const cache=heightCache(listEl,'.subgroup');
+  subDrag={ids:group,primary:id,pointerId:e.pointerId,startY:e.clientY,cache,gap,lastIndex:null};
+  el.setPointerCapture(e.pointerId);
+  el.classList.add('dragging');el.style.zIndex='30';el.style.transition='none';
+  if(group.length>1){
+    document.querySelectorAll('.subgroup').forEach(s=>{if(group.includes(Number(s.dataset.subgroupId))&&Number(s.dataset.subgroupId)!==id)s.style.display='none'});
+    addStack(el,group.length);
+  }
+  window.addEventListener('pointermove',subgroupPointerMove);
+  window.addEventListener('pointerup',subgroupPointerUp,{once:true});
+}
+function subgroupPointerMove(e){
+  if(!subDrag)return;
+  const listEl=document.getElementById('subgroupList');
+  const el=listEl.querySelector('.subgroup[data-subgroup-id="'+subDrag.primary+'"]');
+  if(!el)return;
+  const dy=e.clientY-subDrag.startY;
+  setDragVisual(el,dy);
+  const p=currentProject();
+  const allIds=[...p.subgroups].sort((a,b)=>a.order-b.order).map(g=>g.id);
+  const otherIds=allIds.filter(x=>!subDrag.ids.includes(x));
+  const newIndex=indexByPointer(listEl,otherIds,subDrag.cache,subDrag.gap,e.clientY,80);
+  if(newIndex===subDrag.lastIndex)return;
+  subDrag.lastIndex=newIndex;
+  const seq=[...otherIds];seq.splice(newIndex,0,...subDrag.ids);
+  seq.forEach((gid,i)=>{const g=p.subgroups.find(x=>x.id===gid);if(g)g.order=i});
+  const firstRects=captureRects(listEl,'.subgroup');
+  renderProject();
+  const newEl=document.querySelector('.subgroup[data-subgroup-id="'+subDrag.primary+'"]');
+  if(newEl){
+    newEl.classList.add('dragging');newEl.style.zIndex='30';newEl.style.transition='none';
+    setDragVisual(newEl,dy);
+    try{newEl.setPointerCapture(subDrag.pointerId);}catch(err){}
+    if(subDrag.ids.length>1){
+      document.querySelectorAll('.subgroup').forEach(s=>{if(subDrag.ids.includes(Number(s.dataset.subgroupId))&&Number(s.dataset.subgroupId)!==subDrag.primary)s.style.display='none'});
+      addStack(newEl,subDrag.ids.length);
+    }
+    flipOthers(document.getElementById('subgroupList'),'.subgroup',firstRects,subDrag.ids);
+  }
+}
+function subgroupPointerUp(){
+  if(!subDrag)return;
+  const el=document.querySelector('.subgroup[data-subgroup-id="'+subDrag.primary+'"]');
+  if(el){el.classList.remove('dragging');clearDragVisual(el);}
+  window.removeEventListener('pointermove',subgroupPointerMove);
+  saveState();subDrag=null;
+  setTimeout(()=>renderProject(),220);
+}
+/* ---- 專案卡片排序：可跨小群組移動 ---- */
+let cardDrag=null;
+function startCardDrag(e){
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  e.preventDefault();
+  const el=e.currentTarget.closest('.project-card');
+  const cid=Number(el.dataset.cardId);
+  const gid=Number(el.dataset.subgroupId);
+  const p=currentProject();
+  const fullOrder=[];p.subgroups.forEach(g=>g.cardIds.forEach(id=>fullOrder.push(id)));
+  const group=(projectSelectMode&&selectedCardIds.has(cid)&&selectedCardIds.size>1)
+    ? fullOrder.filter(id=>selectedCardIds.has(id))
+    : [cid];
+  const cache=heightCache(document.getElementById('subgroupList'),'.project-card');
+  const gap=parseFloat(getComputedStyle(el.parentElement).rowGap)||7;
+  cardDrag={ids:group,primary:cid,fromSubgroupId:gid,pointerId:e.pointerId,startY:e.clientY,cache,gap,lastKey:null};
+  el.setPointerCapture(e.pointerId);
+  el.classList.add('dragging');el.style.zIndex='30';el.style.transition='none';
+  if(group.length>1){
+    document.querySelectorAll('.project-card').forEach(c=>{if(group.includes(Number(c.dataset.cardId))&&Number(c.dataset.cardId)!==cid)c.style.display='none'});
+    addStack(el,group.length);
+  }
+  window.addEventListener('pointermove',cardPointerMove);
+  window.addEventListener('pointerup',cardPointerUp,{once:true});
+}
+function cardPointerMove(e){
+  if(!cardDrag)return;
+  const el=document.querySelector('.project-card[data-card-id="'+cardDrag.primary+'"]');
+  if(!el)return;
+  const dy=e.clientY-cardDrag.startY;
+  setDragVisual(el,dy);
+  document.querySelectorAll('.subgroup-body').forEach(b=>b.classList.remove('drop-target-hilite'));
+  const body=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-drop-subgroup]');
+  if(!body)return;
+  const destGid=Number(body.dataset.dropSubgroup);
+  const p=currentProject();
+  const dest=p.subgroups.find(g=>g.id===destGid);
+  if(!dest)return;
+  const otherIds=dest.cardIds.filter(x=>!cardDrag.ids.includes(x));
+  const newIndex=indexByPointer(body,otherIds,cardDrag.cache,cardDrag.gap,e.clientY,52);
+  const key=destGid+'|'+newIndex;
+  if(key!==cardDrag.lastKey){
+    cardDrag.lastKey=key;
+    p.subgroups.forEach(g=>{g.cardIds=g.cardIds.filter(id=>!cardDrag.ids.includes(id))});
+    dest.cardIds.splice(newIndex,0,...cardDrag.ids);
+    const firstRects=captureRects(document.getElementById('subgroupList'),'.project-card');
+    renderProject();
+    const newEl=document.querySelector('.project-card[data-card-id="'+cardDrag.primary+'"]');
+    if(newEl){
+      newEl.classList.add('dragging');newEl.style.zIndex='30';newEl.style.transition='none';
+      setDragVisual(newEl,dy);
+      try{newEl.setPointerCapture(cardDrag.pointerId);}catch(err){}
+      if(cardDrag.ids.length>1){
+        document.querySelectorAll('.project-card').forEach(c=>{if(cardDrag.ids.includes(Number(c.dataset.cardId))&&Number(c.dataset.cardId)!==cardDrag.primary)c.style.display='none'});
+        addStack(newEl,cardDrag.ids.length);
+      }
+      flipOthers(document.getElementById('subgroupList'),'.project-card',firstRects,cardDrag.ids);
+    }
+  }
+  document.querySelector('.subgroup-body[data-drop-subgroup="'+destGid+'"]')?.classList.add('drop-target-hilite');
+}
+function cardPointerUp(){
+  if(!cardDrag)return;
+  const el=document.querySelector('.project-card[data-card-id="'+cardDrag.primary+'"]');
+  if(el){el.classList.remove('dragging');clearDragVisual(el);}
+  document.querySelectorAll('.subgroup-body').forEach(b=>b.classList.remove('drop-target-hilite'));
+  window.removeEventListener('pointermove',cardPointerMove);
+  saveState();cardDrag=null;
+  setTimeout(()=>{renderProject();renderDictionary();},220);
+}
+
+addBtn.onclick=()=>editItem(null);
+collapseAllBtn.onclick=()=>{expandedIds.clear();renderDictionary()};
+expandAllBtn.onclick=()=>{filteredItems().forEach(x=>expandedIds.add(x.id));renderDictionary()};
+search.oninput=renderDictionary;category.onchange=renderDictionary;statusFilter.onchange=renderDictionary;
+favOnlyBtn=favOnly;document.getElementById('favOnly').onclick=()=>{favOnly=!favOnly;renderDictionary()};
+settingsBtn.onclick=()=>settingsDialog.showModal();
+
+addProjectBtn.onclick=()=>newProject();
+renameProjectBtn.onclick=()=>{if(currentProject())newProject(currentProject().id)};
+addSubgroupBtn.onclick=addSubgroup;
+addCardsToProjectBtn.onclick=openPicker;
+pickerSearch.oninput=renderPicker;
+assignProject.onchange=refreshAssignSubgroups;
+confirmAssignBtn.onclick=()=>{
+  const p=state.projects.find(p=>p.id===Number(assignProject.value));
+  const g=p?.subgroups.find(g=>g.id===Number(assignSubgroup.value));
+  if(!p||!g){toast('請先建立小群組');return}
+  if(g.cardIds.includes(assigningCardId)){
+    toast('這張字卡已在該小群組');
+    return;
+  }
+  g.cardIds.push(assigningCardId);
+  activeProjectId=p.id;
+  saveState();
+  assignDialog.close();
+  renderDictionary();
+  renderProjects();
+  toast(`已加入：${p.name}／${g.name}`);
+};
+deleteProjectBtn.onclick=()=>{
+  const p=currentProject();if(!p||!confirm(`移除專案「${p.name}」？字典資料不會刪除。`))return;
+  state.projects=state.projects.filter(x=>x.id!==p.id);activeProjectId=state.projects[0]?.id||null;saveState();renderProjects();
+};
+
+exportBtn.onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='FreeCAD_參數命名字典_完整備份.json';a.click();URL.revokeObjectURL(a.href);
+};
+importBtn.onclick=()=>fileInput.click();
+fileInput.onchange=async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{state=normalizeState(JSON.parse(await file.text()));saveState();activeProjectId=state.projects[0]?.id||null;expandedIds.clear();renderDictionary();renderProjects();toast('匯入完成')}
+  catch(err){alert('匯入失敗：檔案格式不正確。')}
+  e.target.value='';
+};
+resetBtn.onclick=()=>{
+  if(!confirm('還原內建字典會覆蓋目前字典並清除所有專案群組。請先匯出備份。確定繼續？'))return;
+  state=normalizeState({items:structuredClone(BUILTIN),projects:[]});activeProjectId=null;expandedIds.clear();saveState();settingsDialog.close();renderDictionary();renderProjects();toast('已還原內建字典');
+};
+
+renderDictionary();
+renderProjects();
+</script>
+</body>
+</html>
