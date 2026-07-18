@@ -77,8 +77,18 @@ main{max-width:1320px;margin:auto;padding:14px}
 .subgroup-head{display:flex;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid var(--border)}
 .subgroup-head strong{flex:1}
 .subgroup-body{padding:8px;min-height:48px;display:flex;flex-direction:column;gap:7px}
-.project-card{background:white;border:1px solid var(--border);border-radius:10px;padding:9px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
-.project-card.has-sel{grid-template-columns:auto auto minmax(0,1fr) auto}
+.project-card{background:white;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.project-card-summary{padding:9px;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;align-items:center;cursor:pointer}
+.project-card.has-sel .project-card-summary{grid-template-columns:auto auto minmax(0,1fr) auto auto}
+.project-card-body{display:none;border-top:1px solid var(--border);padding:10px}
+.project-card.expanded .project-card-body{display:block}
+.project-card.expanded .project-card-chev{transform:rotate(180deg)}
+.project-card-chev{transition:.18s}
+.subgroup.collapsed .subgroup-body{display:none}
+.subgroup.collapsed .subgroup-head{border-bottom:none}
+.subgroup-toggle{min-width:38px}
+.subgroup.collapsed .subgroup-toggle{transform:rotate(-90deg)}
+
 .project-card .zh-title{font-size:.95rem}
 .project-card .en-sub{font-size:.75rem}
 .empty{text-align:center;color:var(--muted);padding:46px 12px}
@@ -281,6 +291,9 @@ let expandedIds = new Set();
 let activeProjectId = state.projects[0]?.id || null;
 let dictSelectMode=false, selectedDictIds=new Set();
 let projectSelectMode=false, selectedSubgroupIds=new Set(), selectedCardIds=new Set();
+let expandedProjectCards=new Set();
+let collapsedSubgroupIds=new Set();
+let pendingAssignment=null;
 
 function normalizeState(raw){
   const dict = Array.isArray(raw?.items) ? raw.items : (Array.isArray(raw) ? raw : structuredClone(BUILTIN));
@@ -515,12 +528,14 @@ let assigningCardId=null;
 function openAssignDialog(cardId){
   const item=state.items.find(x=>x.id===cardId);
   if(!item)return;
+  assigningCardId=cardId;
   if(!state.projects.length){
-    const go=confirm('目前尚未建立專案群組。要前往「專案群組」建立嗎？');
-    if(go)switchView('projects');
+    pendingAssignment={cardId,stage:'create-project'};
+    switchView('projects');
+    newProject();
+    toast('先建立專案，完成後會接著建立小群組');
     return;
   }
-  assigningCardId=cardId;
   assignCardName.textContent=`${item.zh}｜${item.name}`;
   assignProject.innerHTML=[...state.projects].sort((a,b)=>a.order-b.order)
     .map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
@@ -740,13 +755,20 @@ function newProject(editIdValue=null){
 saveProjectBtn.onclick=e=>{
   e.preventDefault();const name=projectName.value.trim();if(!name){toast('請輸入專案名稱');return}
   const id=Number(projectEditId.value);
+  let createdProjectId=id;
   if(id){state.projects.find(p=>p.id===id).name=name}
   else{
     const pid=state.nextProjectId++;
     state.projects.push({id:pid,name,order:state.projects.length,subgroups:[]});
-    activeProjectId=pid;
+    activeProjectId=pid;createdProjectId=pid;
   }
   saveState();projectDialog.close();renderProjects();
+  if(pendingAssignment?.stage==='create-project' && pendingAssignment.cardId){
+    pendingAssignment.projectId=createdProjectId;
+    pendingAssignment.stage='create-subgroup';
+    setTimeout(()=>addSubgroup(),80);
+    toast('專案已建立，請建立要收納字卡的小群組');
+  }
 };
 function currentProject(){return state.projects.find(p=>p.id===activeProjectId)}
 function renderProjects(){
@@ -761,35 +783,77 @@ function renderProject(){
   if(!p)return;
   projectTitle.textContent=p.name;
   const groups=[...p.subgroups].sort((a,b)=>a.order-b.order);
-  subgroupList.innerHTML=groups.map(g=>`<section class="subgroup ${selectedSubgroupIds.has(g.id)?'selected':''}" data-subgroup-id="${g.id}">
+  subgroupList.innerHTML=groups.map(g=>`<section class="subgroup ${selectedSubgroupIds.has(g.id)?'selected':''} ${collapsedSubgroupIds.has(g.id)?'collapsed':''}" data-subgroup-id="${g.id}">
     <div class="subgroup-head">
       ${projectSelectMode?`<span class="sel-check ${selectedSubgroupIds.has(g.id)?'on':''}" data-sel-subgroup="${g.id}">${selectedSubgroupIds.has(g.id)?'☑':'☐'}</span>`:''}
+      <button class="subgroup-toggle" onclick="toggleSubgroupCollapse(${g.id},event)" title="收折／展開">⌄</button>
       <span class="drag-handle subgroup-handle" title="拖曳小群組">☰</span>
-      <strong>${esc(g.name)}</strong>
+      <strong>${esc(g.name)} <span class="badge">${g.cardIds.length}</span></strong>
       <button onclick="renameSubgroup(${g.id})">改名</button>
       <button class="warn" onclick="removeSubgroup(${g.id})">移除</button>
     </div>
     <div class="subgroup-body" data-drop-subgroup="${g.id}">
-      ${g.cardIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean).map(x=>`
-        <div class="project-card ${x.active?'':'paused'} ${projectSelectMode?'has-sel':''} ${selectedCardIds.has(x.id)?'selected':''}" data-card-id="${x.id}" data-subgroup-id="${g.id}">
-          ${projectSelectMode?`<span class="sel-check ${selectedCardIds.has(x.id)?'on':''}" data-sel-card="${x.id}">${selectedCardIds.has(x.id)?'☑':'☐'}</span>`:''}
-          <span class="drag-handle project-card-handle">☰</span>
-          <div><div class="zh-title">${esc(x.zh)}</div><div class="en-sub">${esc(x.name)}</div></div>
-          <button onclick="removeCardFromProject(${g.id},${x.id})">移除</button>
-        </div>`).join('')}
+      ${g.cardIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean).map(x=>{
+        const key=`${g.id}:${x.id}`;
+        return `<div class="project-card ${x.active?'':'paused'} ${projectSelectMode?'has-sel':''} ${selectedCardIds.has(x.id)?'selected':''} ${expandedProjectCards.has(key)?'expanded':''}" data-card-id="${x.id}" data-subgroup-id="${g.id}">
+          <div class="project-card-summary" onclick="toggleProjectCard(${g.id},${x.id},event)">
+            ${projectSelectMode?`<span class="sel-check ${selectedCardIds.has(x.id)?'on':''}" data-sel-card="${x.id}">${selectedCardIds.has(x.id)?'☑':'☐'}</span>`:''}
+            <span class="drag-handle project-card-handle">☰</span>
+            <div><div class="zh-title">${esc(x.zh)}</div><div class="en-sub">${esc(x.name)}</div></div>
+            <span class="project-card-chev">⌄</span>
+            <button onclick="removeCardFromProject(${g.id},${x.id});event.stopPropagation()">移除</button>
+          </div>
+          <div class="project-card-body">
+            <div class="name-code">${esc(x.name)}</div>
+            <div class="meta">
+              <span class="badge">${esc(x.category)}</span>
+              ${x.suffix?`<span class="badge">${esc(x.suffix)}</span>`:''}
+              ${x.tags.map(t=>`<span class="badge">${esc(t)}</span>`).join('')}
+            </div>
+            ${x.note?`<div class="note-preview">${esc(x.note)}</div>`:''}
+            <div class="actions">
+              <button class="soft copy-name-btn" data-copy-name="${esc(x.name)}">一鍵複製</button>
+              <button onclick="editItem(${x.id})">編輯／標註</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
     </div>
   </section>`).join('') || '<div class="empty">尚未建立小群組。先按「＋ 小群組」。</div>';
   bindProjectDrag();
 }
+function toggleSubgroupCollapse(id,event){
+  event?.stopPropagation();
+  collapsedSubgroupIds.has(id)?collapsedSubgroupIds.delete(id):collapsedSubgroupIds.add(id);
+  renderProject();
+}
+function toggleProjectCard(gid,cid,event){
+  if(event.target.closest('button')||event.target.closest('.drag-handle')||event.target.closest('.sel-check'))return;
+  const key=`${gid}:${cid}`;
+  expandedProjectCards.has(key)?expandedProjectCards.delete(key):expandedProjectCards.add(key);
+  renderProject();
+}
 function addSubgroup(){
   if(!currentProject())return;
-  subgroupName.value='';subgroupDialog.showModal();
+  [assignDialog,projectDialog,pickerDialog].forEach(d=>{try{if(d?.open)d.close()}catch(e){}});
+  subgroupName.value='';
+  setTimeout(()=>subgroupDialog.showModal(),40);
 }
 saveSubgroupBtn.onclick=e=>{
   e.preventDefault();const name=subgroupName.value.trim();if(!name){toast('請輸入小群組名稱');return}
   const p=currentProject(), id=state.nextSubgroupId++;
-  p.subgroups.push({id,name,order:p.subgroups.length,cardIds:[]});
-  saveState();subgroupDialog.close();renderProject();
+  const subgroup={id,name,order:p.subgroups.length,cardIds:[]};
+  p.subgroups.push(subgroup);
+  let autoAssigned=false;
+  if(pendingAssignment?.stage==='create-subgroup' &&
+     pendingAssignment.cardId &&
+     pendingAssignment.projectId===p.id){
+    if(!subgroup.cardIds.includes(pendingAssignment.cardId))subgroup.cardIds.push(pendingAssignment.cardId);
+    autoAssigned=true;
+    pendingAssignment=null;
+  }
+  saveState();subgroupDialog.close();renderProject();renderDictionary();
+  toast(autoAssigned?`已建立小群組並加入字卡：${name}`:'小群組已建立','success');
 };
 function renameSubgroup(id){
   const g=currentProject().subgroups.find(g=>g.id===id);const name=prompt('小群組名稱',g.name);
@@ -1031,6 +1095,8 @@ resetBtn.onclick=()=>{
   state=normalizeState({items:structuredClone(BUILTIN),projects:[]});activeProjectId=null;expandedIds.clear();saveState();settingsDialog.close();renderDictionary();renderProjects();toast('已還原內建字典');
 };
 
+projectDialog.addEventListener('cancel',()=>{if(pendingAssignment?.stage==='create-project')pendingAssignment=null});
+subgroupDialog.addEventListener('cancel',()=>{if(pendingAssignment?.stage==='create-subgroup')pendingAssignment=null});
 renderDictionary();
 renderProjects();
 </script>
