@@ -108,7 +108,7 @@ dialog::backdrop{background:rgba(15,23,42,.55)}
 .hidden{display:none!important}
 @media(max-width:780px){
   .controls{grid-template-columns:1fr 1fr}
-  .controls #search{grid-column:1/-1}
+  .controls .search-wrap{grid-column:1/-1}
   .project-board{grid-template-columns:1fr}
   .project-sidebar{padding:9px}
   .project-list{flex-direction:row;overflow:auto}
@@ -118,7 +118,9 @@ dialog::backdrop{background:rgba(15,23,42,.55)}
   .formgrid .full{grid-column:auto}
   .card-summary{grid-template-columns:auto minmax(0,1fr) auto}
   .card-flags{display:none}
-  .toolbar button{flex:1 1 auto}
+  .toolbar button,.toolbar .switch-row{flex:1 1 auto}
+  .view-tabs{flex-wrap:wrap}
+  .night-switch{margin-left:0}
 }
 @media(prefers-color-scheme:dark){
   :root{--bg:#0b1220;--panel:#111827;--text:#e5e7eb;--muted:#94a3b8;--border:#2a3648;--accent:#3b82f6;--accent-soft:#102248;--paused:#0f172a;--shadow:none}
@@ -136,6 +138,35 @@ dialog::backdrop{background:rgba(15,23,42,.55)}
   .assign-btn{background:#052e2b;border-color:#0f766e;color:#99f6e4}
   .note-preview{color:#cbd5e1}
 }
+
+.search-wrap{position:relative;min-width:0}
+.search-wrap input{padding-right:42px}
+.search-clear{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:32px;height:32px;padding:0;border-radius:50%;font-size:1.35rem;background:transparent;border-color:transparent;color:var(--muted);display:none}
+.search-wrap.has-value .search-clear{display:block}
+.view-tabs{align-items:center}
+.view-tabs .tab-like{white-space:nowrap}
+.night-switch{margin-left:auto}
+.switch-row{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;padding:6px 9px;background:var(--panel);white-space:nowrap;cursor:pointer;user-select:none}
+.switch-row input{position:absolute;opacity:0;pointer-events:none}
+.switch-track{width:44px;height:24px;border-radius:999px;background:#94a3b8;position:relative;transition:.2s}
+.switch-knob{position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:.2s}
+.switch-row input:checked + .switch-track{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18),0 0 14px rgba(34,197,94,.45)}
+.switch-row input:checked + .switch-track .switch-knob{transform:translateX(20px)}
+html.dark{--bg:#090f1a;--panel:#111827;--text:#f8fafc;--muted:#cbd5e1;--border:#475569;--accent:#60a5fa;--accent-soft:#172554;--warn:#fbbf24;--danger:#f87171;--paused:#0f172a;--shadow:none}
+html.dark body,html.dark header,html.dark main,html.dark footer{color:var(--text)}
+html.dark header{background:rgba(17,24,39,.98)}
+html.dark input,html.dark select,html.dark textarea,html.dark button{background:#0f172a;color:#f8fafc;border-color:#475569}
+html.dark .card,html.dark .project-sidebar,html.dark .project-main,html.dark .subgroup,html.dark .project-card,html.dark dialog,html.dark .modal{background:#111827;color:#f8fafc;border-color:#475569}
+html.dark .card.paused,html.dark .project-card.paused{background:#0b1220}
+html.dark .badge{background:#1e293b;color:#e2e8f0}
+html.dark .name-code{background:#0b1220;color:#f8fafc;border-color:#475569}
+html.dark .zh-title,html.dark .project-card .zh-title,html.dark #pickerList .zh-title{color:#f8fafc}
+html.dark .en-sub,html.dark #pickerList .en-sub,html.dark .assignment-status,html.dark .note-preview,html.dark .stats{color:#cbd5e1}
+html.dark .subgroup-head,html.dark .project-card-body,html.dark .card-body{border-color:#475569}
+html.dark .switch-row{background:#111827;color:#f8fafc;border-color:#475569}
+html.dark .assign-btn{background:#064e3b;color:#d1fae5;border-color:#10b981}
+html.dark .soft{background:#172554;color:#dbeafe;border-color:#3b82f6}
+
 </style>
 </head>
 <body>
@@ -143,10 +174,13 @@ dialog::backdrop{background:rgba(15,23,42,.55)}
 <div class="top">
   <h1>FreeCAD 電子零件盒參數命名字典</h1>
   <div class="controls">
-    <input id="search" type="search" placeholder="搜尋中文、英文、分類、標註…" autocomplete="off">
+    <div class="search-wrap">
+  <input id="search" type="search" placeholder="搜尋中文、英文、分類、標註…" autocomplete="off">
+  <button id="clearSearchBtn" class="search-clear" type="button" aria-label="清除搜尋">×</button>
+</div>
     <select id="category"><option value="">全部分類</option></select>
     <select id="statusFilter"><option value="active">啟用中</option><option value="all">全部狀態</option><option value="paused">已暫停</option></select>
-    <button id="favOnly">☆ 僅顯示常用</button>
+    
   </div>
 </div>
 </header>
@@ -155,13 +189,22 @@ dialog::backdrop{background:rgba(15,23,42,.55)}
   <div class="view-tabs">
     <button id="tabDictionary" class="active">命名字典</button>
     <button id="tabProjects">專案群組</button>
+    <button id="favOnly" class="tab-like">☆ 僅顯示常用</button>
+    <label class="switch-row night-switch">
+      <span>夜間模式</span>
+      <input id="nightModeToggle" type="checkbox">
+      <span class="switch-track"><span class="switch-knob"></span></span>
+    </label>
   </div>
 
   <section id="dictionaryView">
     <div class="toolbar">
       <button class="primary" id="addBtn">＋ 新增命名</button>
-      <button id="collapseAllBtn">全部收折</button>
-      <button id="expandAllBtn">全部展開</button>
+      <label class="switch-row expand-switch">
+        <span id="expandSwitchLabel">全部收折</span>
+        <input id="expandAllToggle" type="checkbox">
+        <span class="switch-track"><span class="switch-knob"></span></span>
+      </label>
       <button id="multiSelectDictBtn" class="multiselect-btn">多選</button>
       <button id="settingsBtn">設定</button>
       <span class="stats" id="stats"></span>
@@ -494,6 +537,21 @@ function showCopyFallback(value){
   field.setSelectionRange(0,field.value.length);
   toast('自動複製失敗，請手動複製','error');
 }
+const THEME_KEY='freecad_param_theme_v1';
+function applyTheme(mode){
+  const dark=mode==='dark';
+  document.documentElement.classList.toggle('dark',dark);
+  nightModeToggle.checked=dark;
+  try{localStorage.setItem(THEME_KEY,dark?'dark':'light')}catch(e){}
+}
+function initTheme(){
+  let saved='light';
+  try{saved=localStorage.getItem(THEME_KEY)||'light'}catch(e){}
+  applyTheme(saved);
+}
+function updateSearchClear(){
+  document.querySelector('.search-wrap')?.classList.toggle('has-value',Boolean(search.value));
+}
 function sortedItems(){
   return [...state.items].sort((a,b)=>{
     if(a.active!==b.active) return a.active?-1:1;
@@ -599,6 +657,7 @@ function renderDictionary(){
   document.getElementById('empty').hidden=shown.length!==0;
   document.getElementById('stats').textContent=`顯示 ${shown.length}／${state.items.length} 筆`;
   document.getElementById('favOnly').textContent=favOnly?'★ 顯示全部':'☆ 僅顯示常用';
+  if(typeof expandSwitchLabel!=='undefined')expandSwitchLabel.textContent=expandAllToggle.checked?'全部展開':'全部收折';
   bindCardDrag();
 }
 
@@ -1046,11 +1105,21 @@ function cardPointerUp(){
 }
 
 addBtn.onclick=()=>editItem(null);
-collapseAllBtn.onclick=()=>{expandedIds.clear();renderDictionary()};
-expandAllBtn.onclick=()=>{filteredItems().forEach(x=>expandedIds.add(x.id));renderDictionary()};
-search.oninput=renderDictionary;category.onchange=renderDictionary;statusFilter.onchange=renderDictionary;
+expandAllToggle.onchange=()=>{
+  if(expandAllToggle.checked){
+    filteredItems().forEach(x=>expandedIds.add(x.id));
+  }else{
+    expandedIds.clear();
+  }
+  expandSwitchLabel.textContent=expandAllToggle.checked?'全部展開':'全部收折';
+  renderDictionary();
+};
+search.oninput=()=>{updateSearchClear();renderDictionary()};
+clearSearchBtn.onclick=()=>{search.value='';updateSearchClear();renderDictionary();search.focus()};
+category.onchange=renderDictionary;statusFilter.onchange=renderDictionary;
 favOnlyBtn=favOnly;document.getElementById('favOnly').onclick=()=>{favOnly=!favOnly;renderDictionary()};
 settingsBtn.onclick=()=>settingsDialog.showModal();
+nightModeToggle.onchange=()=>applyTheme(nightModeToggle.checked?'dark':'light');
 
 addProjectBtn.onclick=()=>newProject();
 renameProjectBtn.onclick=()=>{if(currentProject())newProject(currentProject().id)};
@@ -1097,6 +1166,8 @@ resetBtn.onclick=()=>{
 
 projectDialog.addEventListener('cancel',()=>{if(pendingAssignment?.stage==='create-project')pendingAssignment=null});
 subgroupDialog.addEventListener('cancel',()=>{if(pendingAssignment?.stage==='create-subgroup')pendingAssignment=null});
+initTheme();
+updateSearchClear();
 renderDictionary();
 renderProjects();
 </script>
